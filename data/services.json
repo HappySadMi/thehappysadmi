@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "title": "Web Development",
+    "icon": "fas fa-laptop-code",
+    "description": "Modern, responsive websites and web applications tailored to your business needs.",
+    "features": [
+      "Responsive Design",
+      "Landing Pages",
+      "Business Websites",
+      "Admin Dashboards",
+      "Progressive Web Apps"
+    ],
+    "technologies": [
+      "HTML",
+      "CSS",
+      "JavaScript",
+      "PHP",
+      "Laravel"
+    ],
+    "featured": true
+  },
+  {
+    "id": 2,
+    "title": "Software Development",
+    "icon": "fas fa-code",
+    "description": "Custom desktop and web software solutions that improve efficiency and automate workflows.",
+    "features": [
+      "Business Systems",
+      "Inventory Systems",
+      "POS Systems",
+      "Automation",
+      "API Integration"
+    ],
+    "technologies": [
+      "Java",
+      "VB.NET",
+      "PHP",
+      "MySQL"
+    ],
+    "featured": true
+  },
+  {
+    "id": 3,
+    "title": "Data Analytics",
+    "icon": "fas fa-chart-line",
+    "description": "Transform raw data into actionable insights using modern visualization and reporting tools.",
+    "features": [
+      "Dashboards",
+      "Reports",
+      "Data Cleaning",
+      "Business Intelligence",
+      "Excel Automation"
+    ],
+    "technologies": [
+      "Power BI",
+      "Excel",
+      "SQL",
+      "Looker Studio"
+    ],
+    "featured": true
+  },
+  {
+    "id": 4,
+    "title": "Virtual Assistance",
+    "icon": "fas fa-headset",
+    "description": "Reliable administrative and operational support for businesses and entrepreneurs.",
+    "features": [
+      "Data Entry",
+      "Lead Generation",
+      "Research",
+      "Email Management",
+      "Administrative Support"
+    ],
+    "technologies": [
+      "Google Workspace",
+      "Microsoft Office",
+      "CRM Tools"
+    ],
+    "featured": true
+  }
+]

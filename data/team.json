@@ -1,0 +1,90 @@
+[
+  {
+    "id": 1,
+    "name": "Esmeraldo Inciso Jr",
+    "position": "Full Stack Developer",
+    "photo": "assets/images/team/EsmeraldoInciso.jfif",
+    "bio": "Specializes in full-stack web development, backend architecture, and automation solutions.",
+    "skills": [
+      "JavaScript",
+      "Laravel",
+      "PHP",
+      "Flutter",
+      "Firebase"
+    ],
+    "github": "https://github.com/yourusername",
+    "linkedin": "https://linkedin.com/in/yourusername",
+    "facebook": "",
+    "email": "you@email.com"
+  },
+
+  {
+    "id": 2,
+    "name": "Paul John Velasquez",
+    "position": "Full Stack Developer",
+    "photo": "assets/images/team/PaulVelasquez.jfif",
+    "bio": "Specializes in full-stack web development, backend architecture, and automation solutions.",
+    "skills": [
+      "JavaScript",
+      "Laravel",
+      "PHP",
+      "Flutter",
+      "Firebase"
+    ],
+    "github": "https://github.com/yourusername",
+    "linkedin": "https://linkedin.com/in/yourusername",
+    "facebook": "",
+    "email": "you@email.com"
+  },
+  {
+    "id": 3,
+    "name": "Renz Arriola",
+    "position": "Data Analyst",
+    "photo": "assets/images/team/member-2.jpg",
+    "bio": "Passionate about transforming business data into meaningful dashboards and reports.",
+    "skills": [
+      "Power BI",
+      "Excel",
+      "SQL",
+      "Python"
+    ],
+    "github": "",
+    "linkedin": "",
+    "facebook": "",
+    "email": ""
+  },
+  {
+    "id": 4,
+    "name": "Alrose Jane Enero",
+    "position": "Virtual Assistant",
+    "photo": "assets/images/team/member-3.jpg",
+    "bio": "Supports clients through administrative excellence, organization, and communication.",
+    "skills": [
+      "Lead Generation",
+      "Research",
+      "CRM",
+      "Customer Support"
+    ],
+    "github": "",
+    "linkedin": "",
+    "facebook": "",
+    "email": ""
+  },
+  {
+    "id": 4,
+    "name": "Eliaza Rochelle Gilay",
+    "position": "Virtual Assistant",
+    "photo": "assets/images/team/member-3.jpg",
+    "bio": "Supports clients through administrative excellence, organization, and communication.",
+    "skills": [
+      "Lead Generation",
+      "Research",
+      "CRM",
+      "Customer Support"
+    ],
+    "github": "",
+    "linkedin": "",
+    "facebook": "",
+    "email": ""
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "name": "Future Client",
+    "position": "Business Owner",
+    "company": "ABC Company",
+    "photo": "assets/images/testimonials/client-1.jpg",
+    "rating": 5,
+    "message": "Happy Sad Mi delivered exactly what we needed. The team was professional, responsive, and easy to work with."
+  },
+  {
+    "id": 2,
+    "name": "Startup Founder",
+    "position": "CEO",
+    "company": "Innovate Labs",
+    "photo": "assets/images/testimonials/client-2.jpg",
+    "rating": 5,
+    "message": "Their technical expertise and attention to detail exceeded our expectations."
+  },
+  {
+    "id": 3,
+    "name": "Future Partner",
+    "position": "Operations Manager",
+    "company": "Tech Solutions",
+    "photo": "assets/images/testimonials/client-3.jpg",
+    "rating": 5,
+    "message": "Reliable, knowledgeable, and committed to delivering quality work. Highly recommended."
+  }
+]
