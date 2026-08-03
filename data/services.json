@@ -11,13 +11,7 @@
       "Admin Dashboards",
       "Progressive Web Apps"
     ],
-    "technologies": [
-      "HTML",
-      "CSS",
-      "JavaScript",
-      "PHP",
-      "Laravel"
-    ],
+ 
     "featured": true
   },
   {
@@ -31,12 +25,6 @@
       "POS Systems",
       "Automation",
       "API Integration"
-    ],
-    "technologies": [
-      "Java",
-      "VB.NET",
-      "PHP",
-      "MySQL"
     ],
     "featured": true
   },
@@ -52,18 +40,26 @@
       "Business Intelligence",
       "Excel Automation"
     ],
-    "technologies": [
-      "Power BI",
-      "Excel",
-      "SQL",
-      "Looker Studio"
-    ],
     "featured": true
   },
   {
-    "id": 4,
+  "id": 4,
+  "title": "Technical Support",
+  "icon": "fas fa-headset",
+  "description": "Provide reliable technical assistance, troubleshooting, system maintenance, and user support to ensure smooth and efficient IT operations.",
+  "features": [
+    "Hardware Troubleshooting",
+    "Software Installation",
+    "System Maintenance",
+    "Network Support",
+    "Remote Assistance"
+  ],
+  "featured": true
+},
+  {
+    "id": 5,
     "title": "Virtual Assistance",
-    "icon": "fas fa-headset",
+    "icon": "fas fa-laptop",
     "description": "Reliable administrative and operational support for businesses and entrepreneurs.",
     "features": [
       "Data Entry",
@@ -71,11 +67,6 @@
       "Research",
       "Email Management",
       "Administrative Support"
-    ],
-    "technologies": [
-      "Google Workspace",
-      "Microsoft Office",
-      "CRM Tools"
     ],
     "featured": true
   }

@@ -9,33 +9,57 @@
 =========================== */
 
 .about-cards{
-    display:grid;
-    gap:25px;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: stretch;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
 }
 
 .info-card{
-    background:var(--white);
-    padding:30px;
-    border-radius:var(--radius);
-    box-shadow:var(--shadow-sm);
-    border:1px solid var(--gray-200);
+    flex: 1;
+    min-width: 250px;
+    max-width: 320px;
+
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    background: var(--white);
+    padding: 18px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
 }
 
 .info-card i{
-    width:60px;
-    height:60px;
-    display:grid;
-    place-items:center;
-    border-radius:50%;
-    background:rgba(59,130,246,.1);
-    color:var(--secondary);
-    font-size:1.5rem;
-    margin-bottom:20px;
+    width: 50px;
+    height: 50px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: rgba(59,130,246,.1);
+    color: var(--secondary);
+    font-size: 1.3rem;
 }
 
-.info-card h4{
-    margin-bottom:12px;
+.info-content{
+    flex: 1;
 }
+
+.info-content h4{
+    margin: 0 0 10px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--secondary);
+    font-size: 1.1rem;
+}
+
+.info-content p{
+    margin: 0;
+}
+
 
 /* ===========================
    SERVICES
@@ -80,6 +104,7 @@
     color:var(--primary);
 
 }
+
 
 .service-card h3{
 
@@ -195,6 +220,56 @@
 
     margin-bottom:18px;
 
+}
+
+/* HTML5 */
+.tech-card i.fa-html5 {
+    color: #E34F26;
+}
+
+/* CSS3 */
+.tech-card i.fa-css3-alt {
+    color: #1572B6;
+}
+
+/* JavaScript */
+.tech-card i.fa-js-square {
+    color: #F7DF1E;
+}
+
+/* PHP */
+.tech-card i.fa-php {
+    color: #777BB4;
+}
+
+/* Laravel */
+.tech-card i.fa-laravel {
+    color: #FF2D20;
+}
+
+/* MySQL */
+.tech-card i.fa-database {
+    color: #4479A1;
+}
+
+/* GitHub */
+.tech-card i.fa-github {
+    color: #181717;
+}
+
+/* Docker */
+.tech-card i.fa-docker {
+    color: #2496ED;
+}
+
+/* Power BI */
+.tech-card i.fa-chart-bar {
+    color: #F2C811;
+}
+
+/* Microsoft Excel */
+.tech-card i.fa-table {
+    color: #217346;
 }
 
 .tech-card span{
@@ -379,6 +454,18 @@
 
     box-shadow:var(--shadow-sm);
 
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+}
+
+.team-card p{
+    flex: 1;
+}
+
+.card-footer{
+    margin-top: auto;
 }
 
 .team-card img{
@@ -423,7 +510,7 @@
 
 .social-links a{
 
-    width:45px;
+    width:100px;
 
     height:45px;
 

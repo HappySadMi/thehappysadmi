@@ -49,13 +49,7 @@ async function loadServices() {
 
                     </ul>
 
-                    <div class="service-tech">
-
-                        ${service.technologies
-                            .map(tech => `<span>${tech}</span>`)
-                            .join("")}
-
-                    </div>
+                   
 
                 </article>
 

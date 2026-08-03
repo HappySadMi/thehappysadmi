@@ -45,38 +45,17 @@ async function loadTeam() {
 
                     <p>${member.bio}</p>
 
-                    <div class="team-skills">
-                        ${member.skills.map(skill => `
-                            <span>${skill}</span>
-                        `).join("")}
-                    </div>
 
-                    <div class="social-links">
 
-                        ${member.github ? `
-                            <a href="${member.github}" target="_blank">
-                                <i class="fab fa-github"></i>
+                    <div>
+                        <div></br></div>
+                        ${member.website ? `
+                            <a href="${member.website}" target="_blank">
+                                Visit Site ->
                             </a>
                         ` : ""}
 
-                        ${member.linkedin ? `
-                            <a href="${member.linkedin}" target="_blank">
-                                <i class="fab fa-linkedin"></i>
-                            </a>
-                        ` : ""}
-
-                        ${member.facebook ? `
-                            <a href="${member.facebook}" target="_blank">
-                                <i class="fab fa-facebook"></i>
-                            </a>
-                        ` : ""}
-
-                        ${member.email ? `
-                            <a href="mailto:${member.email}">
-                                <i class="fas fa-envelope"></i>
-                            </a>
-                        ` : ""}
-
+                    
                     </div>
 
                 </article>

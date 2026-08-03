@@ -6,7 +6,7 @@
     "featured": true,
     "shortDescription": "A towing and automotive shop locator with real-time maps and messaging.",
     "description": "TowMi is a capstone project designed to connect vehicle owners with nearby towing companies and automotive repair shops. It includes interactive maps, real-time messaging, shop profiles, and search/filter capabilities.",
-    "image": "assets/images/portfolio/towmi.jpg",
+    "image": "assets/images/team/towmi.png",
     "technologies": [
       "Flutter",
       "Firebase",
@@ -17,7 +17,6 @@
     "client": "University Capstone",
     "year": "2025",
     "status": "Completed",
-    "github": "https://github.com/yourusername/towmi",
     "demo": "",
     "color": "#19425D"
   },
@@ -28,7 +27,7 @@
     "featured": true,
     "shortDescription": "Interactive dashboard for business performance monitoring.",
     "description": "A Power BI dashboard that transforms raw sales and operational data into meaningful KPIs and visualizations for decision making.",
-    "image": "assets/images/portfolio/dashboard.jpg",
+    "image": "assets/images/team/power.png",
     "technologies": [
       "Power BI",
       "Excel",
@@ -42,34 +41,15 @@
     "demo": "",
     "color": "#3B82F6"
   },
+  
   {
     "id": 3,
-    "title": "Restaurant POS System",
-    "category": "software",
-    "featured": true,
-    "shortDescription": "Desktop point-of-sale and inventory management system.",
-    "description": "A POS application with inventory management, cashier transactions, reports, and user management.",
-    "image": "assets/images/portfolio/pos.jpg",
-    "technologies": [
-      "VB.NET",
-      "MySQL"
-    ],
-    "role": "Programmer",
-    "client": "Sukidesu Japanese Restaurant",
-    "year": "2024",
-    "status": "Completed",
-    "github": "",
-    "demo": "",
-    "color": "#10B981"
-  },
-  {
-    "id": 4,
     "title": "Company Website",
     "category": "web",
     "featured": false,
     "shortDescription": "Modern responsive corporate website.",
     "description": "A responsive business website built with HTML, CSS, and JavaScript.",
-    "image": "assets/images/portfolio/company-website.jpg",
+    "image": "assets/images/team/sample website.png",
     "technologies": [
       "HTML",
       "CSS",
@@ -84,13 +64,13 @@
     "color": "#19425D"
   },
   {
-    "id": 5,
+    "id": 4,
     "title": "Lead Generation Automation",
     "category": "automation",
     "featured": false,
     "shortDescription": "Automated lead collection and reporting workflow.",
     "description": "Automation workflow that gathers leads, cleans data, and exports reports automatically.",
-    "image": "assets/images/portfolio/automation.jpg",
+    "image": "assets/images/team/ghl-autoamation.webp",
     "technologies": [
       "Google Apps Script",
       "Sheets",

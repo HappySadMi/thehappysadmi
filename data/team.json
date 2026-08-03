@@ -4,87 +4,40 @@
     "name": "Esmeraldo Inciso Jr",
     "position": "Full Stack Developer",
     "photo": "assets/images/team/EsmeraldoInciso.jfif",
-    "bio": "Specializes in full-stack web development, backend architecture, and automation solutions.",
-    "skills": [
-      "JavaScript",
-      "Laravel",
-      "PHP",
-      "Flutter",
-      "Firebase"
-    ],
-    "github": "https://github.com/yourusername",
-    "linkedin": "https://linkedin.com/in/yourusername",
-    "facebook": "",
-    "email": "you@email.com"
+    "bio": "Full Stack Developer with experience building responsive web applications and scalable software solutions. Skilled in both front-end and back-end development, with a focus on creating efficient, user-friendly, and maintainable applications using modern technologies.",
+    "website": "https://esmeraldoinciso.github.io/EsmeraldoInciso"
   },
 
   {
     "id": 2,
-    "name": "Paul John Velasquez",
+    "name": "Paul Velasquez",
     "position": "Full Stack Developer",
-    "photo": "assets/images/team/PaulVelasquez.jfif",
-    "bio": "Specializes in full-stack web development, backend architecture, and automation solutions.",
-    "skills": [
-      "JavaScript",
-      "Laravel",
-      "PHP",
-      "Flutter",
-      "Firebase"
-    ],
-    "github": "https://github.com/yourusername",
-    "linkedin": "https://linkedin.com/in/yourusername",
-    "facebook": "",
-    "email": "you@email.com"
+    "photo": "assets/images/team/paul-1.jpg",
+    "bio": "Full Stack Developer with experience developing modern web applications from front-end interfaces to back-end systems. Passionate about writing clean, scalable code and delivering reliable, user-focused digital solutions.",
+  "website": "https://paulvelasquez.github.io/Portfolio"
   },
   {
     "id": 3,
     "name": "Renz Arriola",
     "position": "Data Analyst",
-    "photo": "assets/images/team/member-2.jpg",
-    "bio": "Passionate about transforming business data into meaningful dashboards and reports.",
-    "skills": [
-      "Power BI",
-      "Excel",
-      "SQL",
-      "Python"
-    ],
-    "github": "",
-    "linkedin": "",
-    "facebook": "",
-    "email": ""
+    "photo": "assets/images/team/renz-1.jpg",
+    "bio": "Data Analyst with experience transforming raw data into meaningful insights through analysis and visualization. Skilled in identifying trends, creating reports, and supporting data-driven decisions to improve business performance.",
+    "website": "https://thailang.github.io/renzarriola/"
   },
   {
     "id": 4,
     "name": "Alrose Jane Enero",
     "position": "Virtual Assistant",
-    "photo": "assets/images/team/member-3.jpg",
-    "bio": "Supports clients through administrative excellence, organization, and communication.",
-    "skills": [
-      "Lead Generation",
-      "Research",
-      "CRM",
-      "Customer Support"
-    ],
-    "github": "",
-    "linkedin": "",
-    "facebook": "",
-    "email": ""
+    "photo": "assets/images/team/alrose-1.jpg",
+    "bio": "Virtual Assistant with expertise in social media management, content scheduling, and audience engagement. Dedicated to building strong online presence, streamlining daily tasks, and helping businesses grow through effective digital communication.",
+     "website": "https://alroseenero.github.io/Resume/"
   },
   {
     "id": 4,
     "name": "Eliaza Rochelle Gilay",
     "position": "Virtual Assistant",
-    "photo": "assets/images/team/member-3.jpg",
-    "bio": "Supports clients through administrative excellence, organization, and communication.",
-    "skills": [
-      "Lead Generation",
-      "Research",
-      "CRM",
-      "Customer Support"
-    ],
-    "github": "",
-    "linkedin": "",
-    "facebook": "",
-    "email": ""
+    "photo": "assets/images/team/lalay-1.jpg",
+    "bio": "Virtual Assistant with experience in social media management, content planning, and administrative support. Skilled at organizing workflows, engaging online communities, and helping businesses maintain a consistent and professional digital presence.",
+    "website": "https://eliazarochellegilay.github.io/portfolio"
   }
 ]
