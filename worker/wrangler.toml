@@ -1,0 +1,29 @@
+# Happy Sad Mi chatbot Worker
+#
+# Deploys to: portfolio.happysadmi.workers.dev
+#
+# The account_id is pinned deliberately. The Worker must never be able to
+# land in a different Cloudflare account just because someone happens to be
+# logged into the wrong one when they run `wrangler deploy`.
+#
+# Verified account: happysadmi@gmail.com -> 010abb6f8110187db697437e1747394c
+
+name = "portfolio"
+main = "src/index.js"
+compatibility_date = "2026-10-03"
+account_id = "010abb6f8110187db697437e1747394c"
+
+[observability]
+enabled = true
+
+[vars]
+# Where the live site content is fetched from. Note the /thehappysadmi/
+# subpath: the site is served from a GitHub Pages project path.
+SITE_URL = "https://happysadmi.github.io/thehappysadmi"
+
+# Comma-separated list of browser origins allowed to call this endpoint.
+# This is the HOST only -- CORS has no concept of a path.
+ALLOWED_ORIGINS = "https://happysadmi.github.io"
+
+# Seconds to hold the assembled site content in the edge cache.
+CONTENT_CACHE_TTL = "300"

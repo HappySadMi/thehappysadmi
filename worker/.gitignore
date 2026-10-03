@@ -1,0 +1,11 @@
+# Wrangler local state and secrets -- never commit
+.dev.vars
+.wrangler/
+
+# If you ever add dependencies
+node_modules/
+package-lock.json
+
+# OS noise
+.DS_Store
+Thumbs.db
