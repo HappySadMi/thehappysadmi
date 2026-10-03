@@ -6,7 +6,7 @@
     "featured": true,
     "shortDescription": "A towing and automotive shop locator with real-time maps and messaging.",
     "description": "TowMi is a capstone project designed to connect vehicle owners with nearby towing companies and automotive repair shops. It includes interactive maps, real-time messaging, shop profiles, and search/filter capabilities.",
-    "image": "assets/images/team/towmi.png",
+    "image": "assets/images/team/towmi.webp",
     "technologies": [
       "Flutter",
       "Firebase",
@@ -27,7 +27,7 @@
     "featured": true,
     "shortDescription": "Interactive dashboard for business performance monitoring.",
     "description": "A Power BI dashboard that transforms raw sales and operational data into meaningful KPIs and visualizations for decision making.",
-    "image": "assets/images/team/power.png",
+    "image": "assets/images/team/power.webp",
     "technologies": [
       "Power BI",
       "Excel",
@@ -49,7 +49,7 @@
     "featured": false,
     "shortDescription": "Modern responsive corporate website.",
     "description": "A responsive business website built with HTML, CSS, and JavaScript.",
-    "image": "assets/images/team/sample website.png",
+    "image": "assets/images/team/sample website.webp",
     "technologies": [
       "HTML",
       "CSS",
@@ -70,7 +70,7 @@
     "featured": false,
     "shortDescription": "Automated lead collection and reporting workflow.",
     "description": "Automation workflow that gathers leads, cleans data, and exports reports automatically.",
-    "image": "assets/images/team/ghl-autoamation.webp",
+    "image": "assets/images/team/ghl-automation.webp",
     "technologies": [
       "Google Apps Script",
       "Sheets",

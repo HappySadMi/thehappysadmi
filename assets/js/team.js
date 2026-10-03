@@ -1,7 +1,9 @@
 /* ==========================================================
    Happy Sad Mi
    team.js
-========================================================== */
+
+   Renders the team gallery from data/team.json.
+   ========================================================== */
 
 const teamGrid = document.getElementById("teamGrid");
 
@@ -11,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ==========================================================
    LOAD TEAM
-========================================================== */
+   ========================================================== */
 
 async function loadTeam() {
 
@@ -19,51 +21,67 @@ async function loadTeam() {
 
     try {
 
-        const response = await fetch("data/team.json");
+        const members = await loadJSON("team.json");
 
-        if (!response.ok) {
-            throw new Error("Unable to load team.json");
-        }
+        const cards = members.map(member => {
 
-        const members = await response.json();
+            const article = createElement("article", { className: "team-card" });
 
-        teamGrid.innerHTML = "";
+            article.appendChild(
+                createElement("img", {
+                    attrs: {
+                        src: member.photo,
+                        alt: `${member.name}, ${member.position}`,
+                        loading: "lazy",
+                        width: "140",
+                        height: "140"
+                    }
+                })
+            );
 
-        members.forEach(member => {
+            article.appendChild(
+                createElement("h3", { text: member.name })
+            );
 
-            teamGrid.innerHTML += `
-                <article class="team-card">
+            article.appendChild(
+                createElement("span", { text: member.position })
+            );
 
-                    <img
-                        src="${member.photo}"
-                        alt="${member.name}"
-                        loading="lazy">
+            article.appendChild(
+                createElement("p", { text: member.bio })
+            );
 
-                    <h3>${member.name}</h3>
+            if (member.website) {
 
-                    <span>${member.position}</span>
+                const link = createElement("a", {
+                    attrs: {
+                        href: member.website,
+                        target: "_blank",
+                        rel: "noopener noreferrer"
+                    }
+                });
 
-                    <p>${member.bio}</p>
+                link.append(
+                    document.createTextNode("Visit Site"),
+                    createElement("span", {
+                        className: "visually-hidden",
+                        text: ` — ${member.name} (opens in a new tab)`
+                    })
+                );
 
+                article.appendChild(link);
 
+            }
 
-                    <div>
-                        <div></br></div>
-                        ${member.website ? `
-                            <a href="${member.website}" target="_blank">
-                                Visit Site ->
-                            </a>
-                        ` : ""}
-
-                    
-                    </div>
-
-                </article>
-            `;
+            return article;
 
         });
 
-        initializeTeamSlider();
+        teamGrid.replaceChildren(...cards);
+
+        // Cards arrive after DOMContentLoaded, so register them with
+        // the scroll-reveal observer.
+        observeRevealTargets();
 
     }
 
@@ -71,76 +89,8 @@ async function loadTeam() {
 
         console.error(error);
 
-        teamGrid.innerHTML = `
-            <p>Unable to load team members.</p>
-        `;
+        renderFallback(teamGrid, "Unable to load team members.");
 
     }
-
-}
-
-/* ==========================================================
-   TEAM SLIDER
-========================================================== */
-
-function initializeTeamSlider() {
-
-    const prev = document.getElementById("teamPrev");
-    const next = document.getElementById("teamNext");
-
-    if (!prev || !next) return;
-
-    function cardWidth() {
-
-        const card = teamGrid.querySelector(".team-card");
-
-        if (!card) return 350;
-
-        const gap = 24;
-
-        return card.offsetWidth + gap;
-
-    }
-
-    function updateButtons() {
-
-        const maxScroll = teamGrid.scrollWidth - teamGrid.clientWidth;
-
-        prev.disabled = teamGrid.scrollLeft <= 5;
-
-        next.disabled = teamGrid.scrollLeft >= maxScroll - 5;
-
-    }
-
-    prev.onclick = () => {
-
-        teamGrid.scrollBy({
-
-            left: -cardWidth(),
-
-            behavior: "smooth"
-
-        });
-
-    };
-
-    next.onclick = () => {
-
-        teamGrid.scrollBy({
-
-            left: cardWidth(),
-
-            behavior: "smooth"
-
-        });
-
-    };
-
-    teamGrid.addEventListener("scroll", updateButtons);
-
-    window.addEventListener("resize", updateButtons);
-
-    // Wait until layout is finished
-    setTimeout(updateButtons, 100);
 
 }

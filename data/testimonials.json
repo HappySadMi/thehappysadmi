@@ -3,20 +3,23 @@
     "id": 1,
     "name": "Ben V.",
     "position": "Startup Founder",
+    "company": "",
     "rating": 5,
-    "message": "Great foundations technical problem solvers"
+    "message": "Great foundations and solid technical problem solvers."
   },
   {
     "id": 2,
     "name": "Norie G.V",
     "position": "Business Owner",
+    "company": "",
     "rating": 5,
-    "message": "Their technical expertise and attention to detail exceeded our expectations."
+    "message": "Their technical expertise and attention to detail exceeded expectations."
   },
   {
     "id": 3,
     "name": "Martzel B.",
     "position": "CS Professor",
+    "company": "",
     "rating": 5,
     "message": "Reliable, knowledgeable, and committed to delivering quality work. Highly recommended."
   }

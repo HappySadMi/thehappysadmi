@@ -1,7 +1,9 @@
 /* ==========================================================
    Happy Sad Mi
    services.js
-========================================================== */
+
+   Renders the services grid from data/services.json.
+   ========================================================== */
 
 const servicesGrid = document.getElementById("servicesGrid");
 
@@ -9,63 +11,70 @@ document.addEventListener("DOMContentLoaded", () => {
     loadServices();
 });
 
+/* ==========================================================
+   LOAD SERVICES
+   ========================================================== */
+
 async function loadServices() {
 
     if (!servicesGrid) return;
 
     try {
 
-        const response = await fetch("data/services.json");
+        const services = await loadJSON("services.json");
 
-        if (!response.ok) {
-            throw new Error("Unable to load services.json");
-        }
+        const cards = services.map(service => {
 
-        const services = await response.json();
+            const article = createElement("article", { className: "service-card" });
 
-        servicesGrid.innerHTML = "";
+            const icon = createElement("div", { className: "service-icon" });
 
-        services.forEach(service => {
+            // The icon string is a trusted Font Awesome class list
+            // (e.g. "fas fa-code") coming from our own data file.
+            icon.appendChild(
+                createElement("i", {
+                    className: service.icon,
+                    attrs: { "aria-hidden": "true" }
+                })
+            );
 
-            servicesGrid.innerHTML += `
+            article.appendChild(icon);
 
-                <article class="service-card">
+            article.appendChild(
+                createElement("h3", { text: service.title })
+            );
 
-                    <div class="service-icon">
-                        <i class="${service.icon}"></i>
-                    </div>
+            article.appendChild(
+                createElement("p", { text: service.description })
+            );
 
-                    <h3>${service.title}</h3>
+            const features = createElement("ul", { className: "service-features" });
 
-                    <p>
-                        ${service.description}
-                    </p>
+            service.features.forEach(feature => {
 
-                    <ul class="service-features">
+                features.appendChild(createElement("li", { text: feature }));
 
-                        ${service.features
-                            .map(feature => `<li>${feature}</li>`)
-                            .join("")}
+            });
 
-                    </ul>
+            article.appendChild(features);
 
-                   
-
-                </article>
-
-            `;
+            return article;
 
         });
 
+        servicesGrid.replaceChildren(...cards);
+
+        // Cards arrive after DOMContentLoaded, so register them with
+        // the scroll-reveal observer.
+        observeRevealTargets();
+
     }
 
-    catch(error){
+    catch (error) {
 
         console.error(error);
 
-        servicesGrid.innerHTML = `
-            <p>Unable to load services.</p>
-        `;
+        renderFallback(servicesGrid, "Unable to load services.");
 
     }
 
