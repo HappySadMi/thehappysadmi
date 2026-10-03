@@ -8,19 +8,18 @@
    ABOUT
 =========================== */
 
+/* Grid rather than wrapping flex: the previous flex-wrap layout left a
+   ragged right edge (2 cards then 1) and capped each card at 320px inside
+   a wider column, so the cards never filled the space beside the copy. */
+
 .about-cards{
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
     gap: 20px;
-    justify-content: space-between;
-    align-items: stretch;
-    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+    align-content: start;
 }
 
 .info-card{
-    flex: 1;
-    min-width: 250px;
-    max-width: 320px;
-
     display: flex;
     align-items: center;
     gap: 16px;
@@ -824,6 +823,9 @@
 
     box-shadow:var(--shadow-sm);
 
+
+
+    min-width:0;
 }
 
 .legal-toc h2{
@@ -880,6 +882,9 @@
 
     box-shadow:var(--shadow-sm);
 
+
+
+    min-width:0;
 }
 
 .legal-content section + section{
