@@ -19,13 +19,12 @@ const MAX_HISTORY_TURNS = 8;
 const MAX_INPUT_CHARS = 800;
 
 /* Short labels on purpose. The longer phrasings wrapped onto four or five
-   rows in a 360px panel and pushed the composer out of view. These fit one
-   or two rows and still read as questions on their own. */
+   rows in a 360px panel and pushed the composer out of view. */
 const SUGGESTIONS = [
-  "Our services",
-  "Meet the team",
-  "Our process",
-  "How to reach us"
+  { icon: "fas fa-layer-group", label: "Our services" },
+  { icon: "fas fa-users", label: "Meet the team" },
+  { icon: "fas fa-diagram-project", label: "Our process" },
+  { icon: "fas fa-envelope", label: "How to reach us" }
 ];
 
 const GREETING =
@@ -46,77 +45,54 @@ function initChat() {
 
   const launcher = createElement("button", {
     className: "chat-launcher",
+    html: '<i class="fas fa-comment-dots" aria-hidden="true"></i>',
     attrs: {
       type: "button",
       id: "chatLauncher",
       "aria-label": "Open the chat assistant",
       "aria-expanded": "false",
-      "aria-controls": "chatPanel",
-      html: '<i class="fas fa-comment-dots" aria-hidden="true"></i>'
+      "aria-controls": "chatPanel"
     }
   });
 
-  const panel = buildPanel();
+  const ui = buildPanel();
 
-  document.body.append(launcher, panel.panel);
+  document.body.append(launcher, ui.panel);
 
-  launcher.addEventListener("click", () => {
+  launcher.addEventListener("click", () => openChat(launcher, ui));
 
-    if (panel.isOpen()) closeChat(launcher, panel);
-    else openChat(launcher, panel);
-
-  });
-
-  panel.closeBtn.addEventListener("click", () => closeChat(launcher, panel));
+  ui.closeBtn.addEventListener("click", () => closeChat(launcher, ui));
 
   // Wired here rather than inside buildPanel, because only now do we have
   // the controls object the handler needs.
-  panel.chips.forEach(chip => {
-
+  ui.chips.forEach(chip => {
     chip.addEventListener("click", () => {
-
-      panel.input.value = chip.textContent;
-      sendMessage(panel);
-
+      ui.input.value = chip.dataset.question;
+      sendMessage(ui);
     });
-
   });
 
-  panel.form.addEventListener("submit", (event) => {
-
+  ui.form.addEventListener("submit", (event) => {
     event.preventDefault();
-    sendMessage(panel);
-
+    sendMessage(ui);
   });
 
-  panel.input.addEventListener("keydown", (event) => {
-
+  ui.input.addEventListener("keydown", (event) => {
     // Enter sends; Shift+Enter inserts a newline.
     if (event.key === "Enter" && !event.shiftKey) {
-
       event.preventDefault();
-      sendMessage(panel);
-
+      sendMessage(ui);
     }
-
   });
 
   // Auto-grow the textarea up to its CSS max-height.
-  panel.input.addEventListener("input", () => {
-
-    panel.input.style.height = "auto";
-    panel.input.style.height = Math.min(panel.input.scrollHeight, 120) + "px";
-
+  ui.input.addEventListener("input", () => {
+    ui.input.style.height = "auto";
+    ui.input.style.height = Math.min(ui.input.scrollHeight, 120) + "px";
   });
 
   document.addEventListener("keydown", (event) => {
-
-    if (event.key === "Escape" && panel.isOpen()) {
-
-      closeChat(launcher, panel);
-
-    }
-
+    if (event.key === "Escape" && ui.isOpen()) closeChat(launcher, ui);
   });
 
   watchConsentBanner();
@@ -139,70 +115,116 @@ function buildPanel() {
     }
   });
 
+  /* ---------- Header ---------- */
+
   const head = createElement("div", { className: "chat-head" });
-  const headText = createElement("div");
+
+  const headMain = createElement("div", { className: "chat-head-main" });
+  headMain.append(
+    createElement("span", {
+      className: "chat-avatar",
+      html: '<i class="fas fa-robot" aria-hidden="true"></i><span class="chat-online"></span>'
+    })
+  );
+
+  const headText = createElement("div", { className: "chat-head-text" });
   headText.append(
     createElement("h2", { text: "Happy Sad Mi assistant", attrs: { id: "chatHeading" } }),
-    createElement("p", { text: "Usually replies in a few seconds" })
+    createElement("p", { text: "Typically replies in seconds" })
   );
+  headMain.append(headText);
+
   const closeBtn = createElement("button", {
     className: "chat-close",
-    attrs: { type: "button", "aria-label": "Close the chat assistant", html: '<i class="fas fa-xmark" aria-hidden="true"></i>' }
+    html: '<i class="fas fa-xmark" aria-hidden="true"></i>',
+    attrs: { type: "button", "aria-label": "Close the chat assistant" }
   });
-  head.append(headText, closeBtn);
+
+  head.append(headMain, closeBtn);
+
+  /* ---------- Transcript ---------- */
 
   // role="log" makes screen readers announce newly added messages.
   const log = createElement("div", {
     className: "chat-log",
-    attrs: { id: "chatLog", role: "log", "aria-live": "polite", "aria-relevant": "additions" }
+    attrs: {
+      id: "chatLog",
+      role: "log",
+      "aria-live": "polite",
+      "aria-relevant": "additions"
+    }
   });
-  log.append(createElement("div", { className: "chat-msg is-bot", text: GREETING }));
 
-  // Chips are built here but wired in initChat. Inside this function
-  // `panel` is the DOM element, not the controls object returned at the
-  // end, so `panel.input` would be undefined. Binding the listener here
-  // threw on every click.
+  const botAvatar = createElement("span", {
+    className: "chat-avatar is-sm",
+    html: '<i class="fas fa-robot" aria-hidden="true"></i>'
+  });
+
+  const greeting = createElement("div", { className: "chat-msg", text: GREETING });
+  const greetingRow = createElement("div", { className: "chat-row is-bot" });
+  greetingRow.append(botAvatar, greeting);
+  log.append(greetingRow);
+
+  /* ---------- Suggested questions ---------- */
+
+  // Built here, wired in initChat: inside this function `panel` is the DOM
+  // element, not the controls object returned below, so `panel.input` would
+  // be undefined.
   const suggestions = createElement("div", { className: "chat-suggestions" });
   const chips = [];
 
-  SUGGESTIONS.forEach(text => {
+  // Icon and label are appended separately rather than passing both `html`
+  // and `text`: `html` assigns innerHTML, which wipes any text already set.
+  SUGGESTIONS.forEach(({ icon, label }) => {
     const chip = createElement("button", {
       className: "chat-suggestion",
-      text,
-      attrs: { type: "button" }
+      attrs: { type: "button", "data-question": label }
     });
+
+    chip.appendChild(createElement("i", {
+      className: icon,
+      attrs: { "aria-hidden": "true" }
+    }));
+    chip.appendChild(document.createTextNode(label));
+
     chips.push(chip);
     suggestions.appendChild(chip);
   });
 
+  /* ---------- Composer ---------- */
+
   const form = createElement("form", { className: "chat-form" });
 
-  const inputId = "chatInput";
   const input = createElement("textarea", {
     className: "chat-input",
     attrs: {
-      id: inputId,
+      id: "chatInput",
       rows: "1",
       maxlength: String(MAX_INPUT_CHARS),
-      placeholder: "Ask about our services, projects or team..."
+      // Kept short enough to sit on one line. A longer prompt wrapped to two
+      // lines and the second was clipped by the single-row textarea.
+      placeholder: "Ask about our services or team…"
     }
   });
 
   const sendBtn = createElement("button", {
     className: "chat-send",
-    attrs: {
-      type: "submit",
-      "aria-label": "Send message",
-      html: '<i class="fas fa-paper-plane" aria-hidden="true"></i>'
-    }
+    html: '<i class="fas fa-paper-plane" aria-hidden="true"></i>',
+    attrs: { type: "submit", "aria-label": "Send message" }
   });
 
-  form.append(input, sendBtn);
+  form.append(
+    createElement("label", { className: "visually-hidden", text: "Type your message", attrs: { for: "chatInput" } }),
+    input,
+    sendBtn
+  );
+
+  /* ---------- Footer note ---------- */
 
   const foot = createElement("p", { className: "chat-foot" });
   foot.innerHTML =
-    'For pricing and scheduling, please use the <a href="#contact">contact form</a>. ' +
-    "Do not send personal details here.";
+    'Pricing or scheduling? <a href="#contact">Use the contact form</a>. ' +
+    "Please don’t send personal details here.";
 
   panel.append(head, log, suggestions, form, foot);
 
@@ -215,10 +237,11 @@ function buildPanel() {
     sendBtn,
     chips,
     suggestions,
+    botAvatar,
     chipsShown: true,
     history: [],
     isOpen: () => panel.classList.contains("is-open")
-};
+  };
 
 }
 
@@ -226,49 +249,53 @@ function buildPanel() {
    OPEN / CLOSE
    ========================================================== */
 
-function openChat(launcher, panel) {
+/**
+ * The panel's bottom edge is level with the launcher (both use --chat-dock),
+ * so the launcher is hidden while the panel is open and the card appears to
+ * grow out of the button's corner.
+ */
+function openChat(launcher, ui) {
 
-  panel.panel.hidden = false;
+  ui.panel.hidden = false;
 
   // Flush the just-removed [hidden] state so the transition has a starting
   // value to animate from.
   //
-  // Deliberately NOT requestAnimationFrame. rAF is paused in background
-  // tabs and throttled by some mobile browsers, and this callback is what
-  // makes the panel visible at all -- with rAF, those environments got a
-  // panel that reported aria-expanded="true" but stayed visibility:hidden,
-  // i.e. completely invisible and unusable. Reading offsetHeight forces the
-  // same style recalculation synchronously.
-  void panel.panel.offsetHeight;
+  // Deliberately NOT requestAnimationFrame. rAF is paused in background tabs
+  // and throttled by some mobile browsers, and this callback is what makes
+  // the panel visible at all -- with rAF, those environments got a panel that
+  // reported aria-expanded="true" but stayed visibility:hidden, i.e.
+  // completely invisible and unusable.
+  void ui.panel.offsetHeight;
 
-  panel.panel.classList.add("is-open");
+  ui.panel.classList.add("is-open");
 
   launcher.setAttribute("aria-expanded", "true");
-  launcher.setAttribute("aria-label", "Close the chat assistant");
+  launcher.hidden = true;
 
-  // Safe to focus now: the panel is visible, unlike before the class was
-  // added, where focus() silently did nothing.
-  panel.input.focus();
+  // Safe to focus now that the panel is visible. Focusing an element that is
+  // still visibility:hidden silently does nothing.
+  ui.input.focus();
 
 }
 
-function closeChat(launcher, panel) {
+function closeChat(launcher, ui) {
 
-  panel.panel.classList.remove("is-open");
+  ui.panel.classList.remove("is-open");
 
   launcher.setAttribute("aria-expanded", "false");
-  launcher.setAttribute("aria-label", "Open the chat assistant");
 
+  // Unhide before restoring focus, otherwise the launcher is still
+  // display:none and focus() silently goes nowhere.
+  launcher.hidden = false;
   launcher.focus();
 
   // Hide only once the fade-out has finished, and only if it was not
   // reopened in the meantime. The timeout is a safety net for a transition
   // that never fires (for example under reduced-motion overrides).
   setTimeout(() => {
-
-    if (!panel.panel.classList.contains("is-open")) panel.panel.hidden = true;
-
-  }, 250);
+    if (!ui.isOpen()) ui.panel.hidden = true;
+  }, 240);
 
 }
 
@@ -276,35 +303,32 @@ function closeChat(launcher, panel) {
    SEND
    ========================================================== */
 
-async function sendMessage(panel) {
+async function sendMessage(ui) {
 
-  const text = panel.input.value.trim();
+  const text = ui.input.value.trim();
 
   if (!text) return;
-  if (panel.input.disabled) return; // still streaming
+  if (ui.input.disabled) return; // still streaming
 
-  panel.input.value = "";
-  panel.input.style.height = "auto";
-
-  panel.log.appendChild(createElement("div", { className: "chat-msg is-user", text }));
+  ui.input.value = "";
+  ui.input.style.height = "auto";
 
   // The starter chips have served their purpose. Keeping them around costs
   // 110-215px of the panel, which on a short screen with the consent banner
   // open is the difference between the composer fitting and being clipped.
-  if (panel.chipsShown) {
-    panel.chipsShown = false;
-    panel.suggestions.hidden = true;
+  if (ui.chipsShown) {
+    ui.chipsShown = false;
+    ui.suggestions.hidden = true;
   }
 
-  const pending = createElement("div", { className: "chat-msg is-bot is-pending" });
-  pending.textContent = "";
-  panel.log.appendChild(pending);
+  appendUser(ui, text);
 
-  scrollToEnd(panel);
+  const bubble = appendBot(ui);
+  bubble.classList.add("is-typing");
+  bubble.append(typingDots());
 
-  setBusy(panel, true);
-
-  const history = panel.history.map(turn => ({ ...turn }));
+  scrollToEnd(ui);
+  setBusy(ui, true);
 
   try {
 
@@ -313,106 +337,126 @@ async function sendMessage(panel) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: text,
-        history,
+        history: ui.history.map(turn => ({ ...turn })),
         stream: true
       })
     });
 
     if (res.status === 429) {
-
       const retry = Number(res.headers.get("Retry-After") || 10);
       throw new Error(
         `Too many messages in a row. Please wait about ${retry} seconds and try again.`
       );
-
     }
 
     if (res.status === 502) {
-
-      throw new Error(
-        "The assistant is taking too long right now. Please try again in a moment."
-      );
-
+      throw new Error("The assistant is taking too long right now. Please try again in a moment.");
     }
 
     if (!res.ok || !res.body) {
-
       throw new Error("Something went wrong reaching the assistant. Please try again.");
-
     }
 
-    // Stream the reply into the pending bubble.
+    // Stream the reply into the pending bubble. Three real dots are shown
+    // until the first token lands, then replaced.
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let full = "";
 
     while (true) {
-
       const { value, done } = await reader.read();
-
       if (done) break;
 
       full += decoder.decode(value, { stream: true });
-      pending.textContent = full;
-      scrollToEnd(panel);
 
+      if (bubble.classList.contains("is-typing")) bubble.classList.remove("is-typing");
+      bubble.textContent = full;
+      scrollToEnd(ui);
     }
 
-    pending.textContent = full.trim();
-    pending.classList.remove("is-pending");
+    full = full.trim();
 
-    if (full.trim()) {
-
-      panel.history.push({ role: "user", content: text });
-      panel.history.push({ role: "assistant", content: full.trim() });
-
-      // Keep the payload small; the Worker caps this anyway.
-      if (panel.history.length > MAX_HISTORY_TURNS * 2) {
-
-        panel.history = panel.history.slice(-MAX_HISTORY_TURNS * 2);
-
-      }
-
-    } else {
-
-      pending.remove();
-      addNotice(panel, "The assistant returned an empty reply. Please try rephrasing.");
-
+    if (!full) {
+      bubble.closest(".chat-row").remove();
+      appendNotice(ui, "The assistant returned an empty reply. Please try rephrasing.");
+      return;
     }
+
+    bubble.textContent = full;
+
+    ui.history.push({ role: "user", content: text });
+    ui.history.push({ role: "assistant", content: full });
+
+    // Keep the payload small; the Worker caps this anyway.
+    const maxMessages = MAX_HISTORY_TURNS * 2;
+    if (ui.history.length > maxMessages) ui.history = ui.history.slice(-maxMessages);
 
   } catch (error) {
 
-    pending.remove();
-    addNotice(panel, error.message || "Something went wrong. Please try again.");
+    bubble.closest(".chat-row").remove();
+    appendNotice(ui, error.message || "Something went wrong. Please try again.");
 
   } finally {
 
-    setBusy(panel, false);
-    panel.input.focus();
+    setBusy(ui, false);
+    ui.input.focus();
 
   }
 
 }
 
-function addNotice(panel, text) {
+function appendUser(ui, text) {
 
-  panel.log.appendChild(createElement("div", { className: "chat-msg is-error", text }));
-
-  scrollToEnd(panel);
-
-}
-
-function setBusy(panel, busy) {
-
-  panel.input.disabled = busy;
-  panel.sendBtn.disabled = busy;
-  panel.log.setAttribute("aria-busy", busy ? "true" : "false");
+  const row = createElement("div", { className: "chat-row is-user" });
+  row.append(createElement("div", { className: "chat-msg", text }));
+  ui.log.appendChild(row);
 
 }
 
-function scrollToEnd(panel) {
+function appendBot(ui) {
 
-  panel.log.scrollTop = panel.log.scrollHeight;
+  const row = createElement("div", { className: "chat-row is-bot" });
+  const bubble = createElement("div", { className: "chat-msg" });
+
+  row.append(ui.botAvatar.cloneNode(true), bubble);
+  ui.log.appendChild(row);
+
+  return bubble;
+
+}
+
+function appendNotice(ui, text) {
+
+  const row = createElement("div", { className: "chat-row is-bot is-error" });
+  row.append(
+    ui.botAvatar.cloneNode(true),
+    createElement("div", { className: "chat-msg", text })
+  );
+  ui.log.appendChild(row);
+
+  scrollToEnd(ui);
+
+}
+
+function typingDots() {
+
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 3; i++) frag.appendChild(createElement("span"));
+  return frag;
+
+}
+
+function setBusy(ui, busy) {
+
+  ui.input.disabled = busy;
+  ui.sendBtn.disabled = busy;
+  ui.log.setAttribute("aria-busy", busy ? "true" : "false");
+
+}
+
+function scrollToEnd(ui) {
+
+  ui.log.scrollTop = ui.log.scrollHeight;
 
 }
 
@@ -421,9 +465,13 @@ function scrollToEnd(panel) {
    ========================================================== */
 
 /**
- * The launcher and the back-to-top button are fixed to the bottom of the
- * viewport, so the consent banner would cover them. Measure the banner and
- * expose it as a CSS variable that chat.css offsets both controls by.
+ * The launcher and the panel are fixed to the bottom of the viewport, so the
+ * consent banner would cover them. Measure the banner and expose it as a CSS
+ * variable that chat.css folds into their offsets.
+ *
+ * chat.css deliberately does not also key off a body class: that class
+ * silently failed to apply once, which left the controls underneath the
+ * banner.
  */
 function watchConsentBanner() {
 
@@ -434,8 +482,6 @@ function watchConsentBanner() {
   const apply = () => {
 
     const open = !banner.hasAttribute("hidden");
-
-    document.body.classList.toggle("has-consent-banner", open);
 
     document.documentElement.style.setProperty(
       "--consent-height",
@@ -448,7 +494,6 @@ function watchConsentBanner() {
   observer.observe(banner, { attributes: true, attributeFilter: ["hidden"] });
 
   banner.addEventListener("transitionend", apply);
-
   window.addEventListener("resize", apply);
 
   apply();
@@ -462,15 +507,17 @@ function watchConsentBanner() {
 /**
  * Minimal element factory. Kept local rather than relying on app.js so the
  * widget works even if the other scripts fail.
+ *
+ * `html` and `text` are top-level options. Passing `html` inside `attrs`
+ * calls setAttribute("html", ...) instead, which silently produces no
+ * markup at all.
  */
 function createElement(tag, options = {}) {
 
   const el = document.createElement(tag);
 
   if (options.className) el.className = options.className;
-
   if (options.text != null) el.textContent = options.text;
-
   if (options.html != null) el.innerHTML = options.html;
 
   if (options.attrs) {

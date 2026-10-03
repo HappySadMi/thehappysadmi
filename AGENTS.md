@@ -129,7 +129,15 @@ Three things are fixed to the bottom-right of the viewport: `.back-to-top` (decl
 
 The panel's height must account for its own bottom offset as well as the banner. Getting that wrong let the panel's top edge go to `-22px`, clipping the header off the top of the screen.
 
-The panel is a column flexbox. `.chat-log` needs `min-height: 0` or it refuses to shrink below its content and pushes the composer out of the panel.
+The panel is a column flexbox. `.chat-log` needs `min-height: 0` or it refuses to shrink below its content and pushes the composer out of the panel. On the smallest phone (360x640) with the tallest consent banner, the fixed rows still overrun the panel by a few pixels, so `.chat-form`/`.chat-foot` padding is trimmed under `max-width:600px` to claw that back.
+
+The launcher and the panel share one `--chat-dock` value (96px desktop, 80px mobile) so the panel's bottom edge is exactly level with the button and the card appears to grow out of its corner. The launcher is hidden while the panel is open. **Do not add a mobile `bottom` override to `.chat-panel`** — the base rule is already correct, and an override that only set `8px + banner` breaks the level alignment; one that omitted the dock entirely pushed the panel off the top of the screen.
+
+### 6c. `createElement` in `chat.js`: `html` overwrites `text`
+
+`createElement(tag, { className, text, html, attrs })` applies `text` first and then `html`. Setting `innerHTML` wipes any text content, so passing both silently drops the text. Passing `html` inside `attrs` is worse: it calls `setAttribute("html", ...)`, which produces no markup at all. That bug shipped once and left every Font Awesome icon in the widget missing while the rest of the page's icons rendered fine — the widget builds its own `createElement` rather than reusing `app.js`'s, so nothing else caught it.
+
+Icon and label elements are appended separately (never combined into one `innerHTML` string) so the label can never be a parsed-HTML value.
 
 ### 7. Design tokens live in `:root` (`assets/css/style.css`)
 
