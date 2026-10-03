@@ -18,6 +18,8 @@ import {
   screenReply,
   isInstructionProbe,
   containsPersonalData,
+  runModelStream,
+  streamScreened,
   PII_DEFLECTION,
 } from "./llm.js";
 import { checkRateLimit, rateLimitHeaders, RateLimiter } from "./ratelimit.js";
@@ -243,6 +245,14 @@ async function handleChat(env, request, extraHeaders = {}) {
 
   const started = Date.now();
 
+  // Streaming: chosen by the client. The site widget uses it so the first
+  // words appear in well under a second instead of after a 2-8s pause.
+  if (body.stream === true) {
+
+    return handleChatStream(env, request, messages, extraHeaders, started);
+
+  }
+
   try {
     const { reply: rawReply, model } = await askModel(env, { messages });
 
@@ -284,6 +294,92 @@ async function handleChat(env, request, extraHeaders = {}) {
       extraHeaders
     );
   }
+}
+
+/**
+ * Streaming response.
+ *
+ * Emits plain-text chunks as they arrive. Output screening still applies:
+ * streamScreened holds back the opening of the reply so a leak is caught
+ * before any of it reaches the browser, then keeps screening as it goes.
+ */
+async function handleChatStream(env, request, messages, extraHeaders, started) {
+
+  let modelStream;
+
+  try {
+
+    modelStream = await runModelStream(env, { messages });
+
+  } catch (error) {
+
+    console.error("Model stream failed:", error);
+
+    return json(
+      env,
+      request,
+      { error: "The assistant is unavailable right now. Please try again shortly." },
+      502,
+      extraHeaders
+    );
+
+  }
+
+  // Some Workers AI shapes resolve to a response object rather than a stream.
+  if (!modelStream || typeof modelStream.getReader !== "function") {
+
+    const { reply } = screenReply(extractTextFallback(modelStream));
+
+    return json(env, request, { reply, streamed: false }, 200, extraHeaders);
+
+  }
+
+  const encoder = new TextEncoder();
+
+  const body = new ReadableStream({
+    async start(controller) {
+
+      try {
+
+        await streamScreened(modelStream, (text) => {
+
+          controller.enqueue(encoder.encode(text));
+
+        });
+
+      } catch (error) {
+
+        console.error("Stream aborted:", error);
+
+        controller.enqueue(
+          encoder.encode("\n\n(Sorry, the response was cut short. Please try again.)")
+        );
+
+      } finally {
+
+        controller.close();
+
+      }
+
+    },
+  });
+
+  return new Response(body, {
+    status: 200,
+    headers: corsHeaders(env, request, {
+      ...extraHeaders,
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Accel-Buffering": "no",
+    }),
+  });
+}
+
+function extractTextFallback(result) {
+  if (!result) return "";
+  if (typeof result === "string") return result;
+  if (typeof result.response === "string") return result.response;
+  return "";
 }
 
 /**

@@ -44,6 +44,13 @@ const LEAK_DEFLECTION =
   "I can't share internal instructions. Ask me about Happy Sad Mi's services, " +
   "projects or team and I'll help.";
 
+function looksLeaked(text) {
+  const normalised = text.replace(/\s+/g, " ");
+  return PROMPT_LEAK_MARKERS.some((marker) =>
+    normalised.includes(marker.replace(/\s+/g, " "))
+  );
+}
+
 /**
  * Returns the reply, or a deflection if it looks like an instruction leak.
  * Deliberately neither confirms nor denies that instructions exist --
@@ -192,20 +199,7 @@ export function buildMessages({ systemPrompt, knowledge, history, message }) {
  * Throws ModelUnavailable if Workers AI is unreachable or errors.
  */
 export async function askModel(env, { messages }) {
-  const model = env.AI_MODEL || DEFAULT_MODEL;
-  const timeoutMs = Number(env.AI_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS;
-
-  let response;
-
-  try {
-    response = await withTimeout(
-      env.AI.run(model, { messages, stream: false }),
-      timeoutMs,
-      `Workers AI (${model}) did not respond within ${timeoutMs}ms`
-    );
-  } catch (error) {
-    throw new ModelUnavailable(error.message);
-  }
+  const response = await runModel(env, messages);
 
   const reply = extractText(response);
 
@@ -213,7 +207,192 @@ export async function askModel(env, { messages }) {
     throw new ModelUnavailable("Model returned an empty response.");
   }
 
-  return { reply, model };
+  return { reply, model: modelName(env) };
+}
+
+/**
+ * Streaming variant. Returns the Workers AI ReadableStream.
+ *
+ * Callers must ALSO screen the output: a streamed reply arrives
+ * progressively, so screenReply() on the final text alone is not enough.
+ * See streamScreened().
+ */
+export function runModelStream(env, { messages }) {
+  return runModel(env, messages, true);
+}
+
+/* ------------------------------------------------------------------ */
+/* Screened streaming                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Holds back the opening of a streamed reply, screens it, and only then
+ * starts emitting. Continues screening as chunks arrive and cuts the stream
+ * if a leak shows up later.
+ *
+ * The priming buffer exists because output screening normally happens on a
+ * finished reply. When streaming, whatever has been sent cannot be recalled,
+ * so a leak would already be on screen by the time we noticed one. Leaked
+ * instructions start almost immediately ("You are the assistant for..."),
+ * so holding back the first PRIME_CHARS characters catches them before the
+ * visitor ever sees them.
+ *
+ * This keeps the fast path exactly as safe as the buffered one.
+ */
+const PRIME_CHARS = 240;
+
+/**
+ * Upper bound on how long the opening is held back before it is screened
+ * and released.
+ *
+ * Priming purely on character count would tie added latency to how fast the
+ * model generates. Time-bounding it means the screen still happens before
+ * anything reaches the visitor, but the worst case is a fixed few hundred
+ * milliseconds rather than however long 240 characters take.
+ */
+const PRIME_MAX_WAIT_MS = 300;
+
+export async function streamScreened(source, onText) {
+  const reader = source.getReader();
+  const decoder = new TextDecoder();
+
+  let pending = "";   // raw SSE bytes not yet split into events
+  let buffered = "";  // assistant text awaiting the priming threshold
+  let emitted = false;
+  let emittedChars = "";
+  let blocked = false;
+  let firstTextAt = null;
+
+  const flush = (text) => {
+    if (!text) return;
+
+    const now = Date.now();
+    if (firstTextAt === null) firstTextAt = now;
+
+    buffered += text;
+
+    if (!emitted) {
+      // Release once we have enough text, or once enough time has passed
+      // that waiting longer would only hurt perceived latency.
+      const enoughText = buffered.length >= PRIME_CHARS;
+      const waitedLongEnough = now - firstTextAt >= PRIME_MAX_WAIT_MS;
+
+      if (!enoughText && !waitedLongEnough) return; // still priming
+
+      if (looksLeaked(buffered)) {
+        blocked = true;
+        onText(LEAK_DEFLECTION);
+        return;
+      }
+
+      emitted = true;
+      emittedChars = buffered;
+      onText(buffered);
+      buffered = "";
+      return;
+    }
+
+    emittedChars += text;
+
+    // A marker can straddle a chunk boundary, so screen the tail as well.
+    if (looksLeaked(emittedChars.slice(-400))) {
+      blocked = true;
+      return;
+    }
+
+    onText(text);
+  };
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      pending += decoder.decode(value, { stream: true });
+
+      // Workers AI streams Server-Sent Events, one JSON object per event:
+      //   data: {"response":"...","usage":{...}}
+      // A blank line separates events. Comments and other fields ignored.
+      let split;
+      while ((split = pending.indexOf("\n\n")) !== -1) {
+        const rawEvent = pending.slice(0, split);
+        pending = pending.slice(split + 2);
+
+        const text = parseSseDelta(rawEvent);
+        if (text !== null) flush(text);
+      }
+
+      if (blocked) break;
+    }
+
+    // A trailing event that arrived without a final blank line.
+    if (pending.trim()) {
+      const text = parseSseDelta(pending);
+      if (text !== null) flush(text);
+    }
+  } finally {
+    try {
+      await reader.cancel();
+    } catch {
+      /* already closed */
+    }
+  }
+
+  if (blocked) {
+    onText(LEAK_DEFLECTION);
+  } else if (!emitted && buffered) {
+    // A short reply that never reached the priming threshold.
+    onText(looksLeaked(buffered) ? LEAK_DEFLECTION : buffered);
+  }
+
+  return { blocked };
+}
+
+/**
+ * Extracts assistant text from one SSE event.
+ * Returns null for frames carrying no text (keepalives, usage-only frames).
+ */
+function parseSseDelta(rawEvent) {
+  for (const line of rawEvent.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("data:")) continue;
+
+    const payload = trimmed.slice(5).trim();
+    if (!payload || payload === "[DONE]") continue;
+
+    try {
+      const parsed = JSON.parse(payload);
+      if (typeof parsed.response === "string") return parsed.response;
+      if (typeof parsed.text === "string") return parsed.text;
+    } catch {
+      // Malformed frame: skip it rather than fail the whole stream.
+    }
+  }
+
+  return null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Internals                                                           */
+/* ------------------------------------------------------------------ */
+
+function modelName(env) {
+  return env.AI_MODEL || DEFAULT_MODEL;
+}
+
+async function runModel(env, messages, stream = false) {
+  const model = modelName(env);
+  const timeoutMs = Number(env.AI_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS;
+
+  try {
+    return await withTimeout(
+      env.AI.run(model, { messages, stream }),
+      timeoutMs,
+      `Workers AI (${model}) did not respond within ${timeoutMs}ms`
+    );
+  } catch (error) {
+    throw new ModelUnavailable(error.message);
+  }
 }
 
 /**
