@@ -1,4 +1,4 @@
-# Happy Sad Mi chatbot Worker
+﻿# Happy Sad Mi chatbot Worker
 #
 # Deploys to: portfolio.happysadmi.workers.dev
 #
@@ -32,6 +32,10 @@ class_name = "RateLimiter"
 tag = "v1"
 new_sqlite_classes = ["RateLimiter"]
 
+# Workers AI binding. Without this, env.AI does not exist.
+[ai]
+binding = "AI"
+
 [vars]
 # Where the live site content is fetched from. Note the /thehappysadmi/
 # subpath: the site is served from a GitHub Pages project path.
@@ -51,3 +55,12 @@ RATE_LIMIT_PER_MINUTE = "20"
 
 # Token bucket depth, i.e. short bursts are tolerated.
 RATE_LIMIT_BURST = "10"
+
+# Workers AI model. Swap here, no code change needed.
+#   @cf/meta/llama-3.1-8b-instruct-fp8  fast + cheap, good for this scope
+#   @cf/openai/gpt-oss-120b              stronger refusals, slower and dearer
+#   @cf/mistral/mistral-7b-instruct-v0.2-lora
+AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
+
+# Hard ceiling on a single model call, so a hung request cannot pin an isolate.
+AI_TIMEOUT_MS = "25000"

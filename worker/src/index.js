@@ -1,22 +1,25 @@
 /**
- * Happy Sad Mi chatbot Worker -- Phase 1.
+ * Happy Sad Mi chatbot Worker.
  *
- * No AI is wired up yet. This phase exists to prove the plumbing before a
- * model is involved:
- *
- *   - the Worker is deployed to the right Cloudflare account
- *   - the live site content can actually be fetched and cached
- *   - CORS is pinned to our origin and rejects everything else
- *   - the assembled knowledge payload is correct and complete
+ * The chatbot is grounded on the team's own site content, fetched live at
+ * request time so it cannot drift from data/*.json. See README.md.
  *
  * Endpoints:
  *   GET  /health   liveness + a summary of what content loaded
- *   POST /chat     returns the exact payload the model will receive
+ *   POST /chat     ask the assistant a question
  *   GET  /prompt   returns the static system prompt, for review
  */
 
 import { loadKnowledge, summarise } from "./knowledge.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
+import {
+  askModel,
+  buildMessages,
+  screenReply,
+  isInstructionProbe,
+  containsPersonalData,
+  PII_DEFLECTION,
+} from "./llm.js";
 import { checkRateLimit, rateLimitHeaders, RateLimiter } from "./ratelimit.js";
 
 // Re-exported so Wrangler can find the Durable Object class in the entry module.
@@ -129,8 +132,8 @@ export default {
       if (url.pathname === "/" && request.method === "GET") {
         return json(env, request, {
           name: "happysadmi-chatbot",
-          phase: 1,
-          ai: "not wired up yet",
+          phase: 3,
+          ai: env.AI_MODEL || "default",
           endpoints: ["GET /health", "POST /chat", "GET /prompt"],
         });
       }
@@ -146,7 +149,7 @@ export default {
 };
 
 /* ------------------------------------------------------------------ */
-/* Chat (Phase 1 stub)                                                 */
+/* Chat                                                                 */
 /* ------------------------------------------------------------------ */
 
 async function handleChat(env, request, extraHeaders = {}) {
@@ -184,21 +187,119 @@ async function handleChat(env, request, extraHeaders = {}) {
 
   const knowledge = await loadKnowledge(env);
 
-  // Phase 1: no model call. Return exactly what Phase 3 will send, so the
-  // assembled context and the prompt can be reviewed before spending on
-  // inference.
-  return json(env, request, {
-    phase: 1,
-    ai: "not wired up yet",
-    received: { message, historyTurns: history.length },
-    knowledge: summarise(knowledge),
-    siteContent: {
-      services: knowledge.services,
-      portfolio: knowledge.portfolio,
-      team: knowledge.team,
-      testimonials: knowledge.testimonials,
-      prose: knowledge.prose,
-    },
+  // --- Input gates: refuse deterministically, before spending neurons ---
+
+  // Instruction extraction. The model is never asked, so nothing can leak.
+  if (isInstructionProbe(message)) {
+
+    console.warn("Blocked an instruction-extraction attempt at the input gate.");
+
+    return json(
+      env,
+      request,
+      {
+        reply:
+          "I can't share internal instructions. Ask me about Happy Sad Mi's " +
+          "services, projects or team and I'll help.",
+        blocked: true,
+        blockedReason: "instruction_probe",
+        model: env.AI_MODEL || null,
+        knowledge: summarise(knowledge),
+      },
+      200,
+      extraHeaders
+    );
+
+  }
+
+  // Visitor-supplied personal data. Keeps PII out of the model entirely and
+  // guarantees it is not echoed back.
+  if (containsPersonalData(message)) {
+
+    console.warn("Redirected a message containing personal data.");
+
+    return json(
+      env,
+      request,
+      {
+        reply: PII_DEFLECTION,
+        blocked: true,
+        blockedReason: "personal_data",
+        model: env.AI_MODEL || null,
+        knowledge: summarise(knowledge),
+      },
+      200,
+      extraHeaders
+    );
+
+  }
+
+  const messages = buildMessages({
     systemPrompt: SYSTEM_PROMPT,
-  }, 200, extraHeaders);
+    knowledge,
+    history: sanitiseHistory(history),
+    message,
+  });
+
+  const started = Date.now();
+
+  try {
+    const { reply: rawReply, model } = await askModel(env, { messages });
+
+    // Enforce the no-leak rule here rather than trusting the model to.
+    const { reply, blocked } = screenReply(rawReply);
+
+    if (blocked) {
+      console.warn("Blocked an attempted instruction leak before responding.");
+    }
+
+    return json(
+      env,
+      request,
+      {
+        reply,
+        model,
+        tookMs: Date.now() - started,
+        blocked,
+        knowledge: summarise(knowledge),
+      },
+      200,
+      extraHeaders
+    );
+  } catch (error) {
+    // Log the detail, never return it.
+    console.error("Model call failed:", error);
+
+    const timedOut = /did not respond within/.test(error.message);
+
+    return json(
+      env,
+      request,
+      {
+        error: timedOut
+          ? "The assistant took too long to respond. Please try again."
+          : "The assistant is unavailable right now. Please try again shortly.",
+      },
+      502,
+      extraHeaders
+    );
+  }
+}
+
+/**
+ * Keeps only role/content, drops anything else the client may have sent,
+ * and caps each turn. Client input is untrusted.
+ */
+function sanitiseHistory(history) {
+  return history
+    .filter(
+      (turn) =>
+        turn &&
+        (turn.role === "user" || turn.role === "assistant") &&
+        typeof turn.content === "string"
+    )
+    .map((turn) => ({
+      role: turn.role,
+      content: turn.content.slice(0, 2000),
+    }));
 }
