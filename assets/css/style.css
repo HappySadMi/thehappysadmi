@@ -695,6 +695,50 @@ p{
 
 }
 
+/* Between 769px and ~1000px the full 8-item nav no longer fits beside the
+   logo and the last links get clipped by the fixed header (the header is
+   position:fixed, so this never shows up as a page scrollbar -- the links
+   are simply unreachable). Tighten spacing rather than dropping to the
+   hamburger this early, so tablets still get the desktop nav. */
+
+@media (max-width:1024px){
+
+    .nav-links{
+
+        gap:22px;
+
+    }
+
+    .logo{
+
+        font-size:1.5rem;
+
+    }
+
+}
+
+@media (max-width:880px){
+
+    .nav-links{
+
+        gap:15px;
+
+    }
+
+    .nav-links a{
+
+        font-size:.9rem;
+
+    }
+
+    .logo{
+
+        font-size:1.35rem;
+
+    }
+
+}
+
 .menu-btn{
 
     display:none;
@@ -852,7 +896,10 @@ p{
 
     margin-bottom:15px;
 
-    text-align:center;
+    /* Left-aligned to match the paragraphs beneath it. A centred heading
+       over left-aligned body copy looks accidental in a narrow column. */
+
+    text-align:left;
 
 }
 
@@ -884,21 +931,25 @@ p{
 
 }
 
+/* The min() clamp is what stops these tracks forcing a horizontal
+   scrollbar on phones: a bare minmax(500px, 1fr) floor would make the
+   card 500px wide inside a ~330px container. Never remove it. */
+
 .services-grid{
 
-    grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(min(350px,100%),1fr));
 
 }
 
 .tech-grid{
 
-    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));
 
 }
 
 .portfolio-grid{
 
-    grid-template-columns:repeat(auto-fit,minmax(500px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(min(500px,100%),1fr));
 
 }
 
@@ -912,7 +963,7 @@ p{
 
 .testimonial-grid{
 
-    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));
 
 }
 
@@ -928,7 +979,7 @@ p{
 
 .team-gallery{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(min(350px,100%),1fr));
     gap:24px;
     margin-top:40px;
 }
@@ -999,7 +1050,7 @@ p{
 @media (max-width:768px){
 
     .team-gallery{
-        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+        grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));
     }
 
 }
@@ -1181,6 +1232,15 @@ p{
     .contact-grid{
 
         grid-template-columns:1fr;
+
+    }
+
+    /* Single column: the copy now spans the section, so a centred
+       lead-in reads as deliberate. */
+
+    .about-grid h3{
+
+        text-align:center;
 
     }
 
