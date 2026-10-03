@@ -209,20 +209,25 @@ function openChat(launcher, panel) {
 
   panel.panel.hidden = false;
 
+  // Flush the just-removed [hidden] state so the transition has a starting
+  // value to animate from.
+  //
+  // Deliberately NOT requestAnimationFrame. rAF is paused in background
+  // tabs and throttled by some mobile browsers, and this callback is what
+  // makes the panel visible at all -- with rAF, those environments got a
+  // panel that reported aria-expanded="true" but stayed visibility:hidden,
+  // i.e. completely invisible and unusable. Reading offsetHeight forces the
+  // same style recalculation synchronously.
+  void panel.panel.offsetHeight;
+
+  panel.panel.classList.add("is-open");
+
   launcher.setAttribute("aria-expanded", "true");
   launcher.setAttribute("aria-label", "Close the chat assistant");
 
-  // Next frame, so the transition has an initial state to animate from.
-  requestAnimationFrame(() => {
-
-    panel.panel.classList.add("is-open");
-
-    // Focus only once the panel is actually visible. Focusing an element
-    // that is still visibility:hidden silently does nothing, which is why
-    // this cannot happen before the class is added.
-    panel.input.focus();
-
-  });
+  // Safe to focus now: the panel is visible, unlike before the class was
+  // added, where focus() silently did nothing.
+  panel.input.focus();
 
 }
 
@@ -235,12 +240,14 @@ function closeChat(launcher, panel) {
 
   launcher.focus();
 
-  // Wait out the transition before hiding, so it does not vanish abruptly.
+  // Hide only once the fade-out has finished, and only if it was not
+  // reopened in the meantime. The timeout is a safety net for a transition
+  // that never fires (for example under reduced-motion overrides).
   setTimeout(() => {
 
     if (!panel.panel.classList.contains("is-open")) panel.panel.hidden = true;
 
-  }, 220);
+  }, 250);
 
 }
 
