@@ -104,14 +104,21 @@ body.has-consent-banner .back-to-top{
     overflow:hidden;
 
     /* Off-screen until opened; kept in the DOM so its controls stay
-       reachable by keyboard once open. */
+       reachable by keyboard once open.
+
+       `visibility` uses a zero-duration transition with a delay instead of
+       being animated alongside opacity. It must flip to `visible` the
+       instant the panel opens, otherwise focus() called on the input in the
+       same tick lands on a visibility:hidden element and silently does
+       nothing. On close, the delay holds it visible until the fade has
+       finished so the panel does not blink out. */
     transform:translateY(12px) scale(.98);
 
     opacity:0;
 
     visibility:hidden;
 
-    transition:opacity .2s ease, transform .2s ease, visibility .2s;
+    transition:opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
 
 }
 
@@ -128,6 +135,8 @@ body.has-consent-banner .back-to-top{
     opacity:1;
 
     visibility:visible;
+
+    transition:opacity .2s ease, transform .2s ease, visibility 0s linear 0s;
 
 }
 
