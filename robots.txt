@@ -1,0 +1,11 @@
+# robots.txt
+# Happy Sad Mi - https://happysadmi.com
+
+User-agent: *
+Allow: /
+
+# Nothing behind a login or a search should be indexed.
+Disallow: /?q=
+Disallow: /search
+
+Sitemap: https://happysadmi.com/sitemap.xml

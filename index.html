@@ -15,7 +15,47 @@
 
     <meta name="author" content="Happy Sad Mi">
 
+    <meta name="theme-color" content="#192A5D">
+
+    <!-- Open Graph / social -->
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Happy Sad Mi">
+    <meta property="og:title" content="Happy Sad Mi | Web Development • Software Development • Data Analytics">
+    <meta property="og:description"
+        content="A team of passionate IT professionals delivering modern websites, software systems, data analytics, automation, and virtual assistance.">
+    <meta property="og:image" content="og-image.jpg">
+    <meta property="og:locale" content="en_PH">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Happy Sad Mi | Web Development • Software Development • Data Analytics">
+    <meta name="twitter:description"
+        content="A team of passionate IT professionals delivering modern websites, software systems, data analytics, automation, and virtual assistance.">
+    <meta name="twitter:image" content="og-image.jpg">
+
+    <!-- Structured data -->
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "Happy Sad Mi",
+      "description": "A team of IT professionals specializing in Web Development, Software Development, Data Analytics, Automation, and Virtual Assistance.",
+      "email": "happysadmi@gmail.com",
+      "areaServed": "Philippines",
+      "knowsAbout": [
+        "Web Development",
+        "Software Development",
+        "Data Analytics",
+        "Business Intelligence",
+        "Automation",
+        "Virtual Assistance"
+      ]
+    }
+    </script>
+
     <!-- Google Fonts -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -23,22 +63,27 @@
         rel="stylesheet">
 
     <!-- Font Awesome -->
+
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/animations.css">
 
+    <link rel="stylesheet" href="assets/css/style.css?v=6">
+    <link rel="stylesheet" href="assets/css/components.css?v=6">
+    <link rel="stylesheet" href="assets/css/animations.css?v=6">
+
+    <!-- Icons / PWA -->
 
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="manifest" href="site.webmanifest">
 
     <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WTDKF7Z8ZC"></script>
 
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -49,12 +94,24 @@
 
         gtag('js', new Date());
 
-        gtag('config', 'G-WTDKF7Z8ZC');
+        gtag('config', 'G-WTDKF7Z8ZC', { anonymize_ip: true });
     </script>
     <!-- End Google Analytics -->
 </head>
 
 <body>
+
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <noscript>
+        <div class="noscript-banner">
+            <p>
+                This site uses JavaScript to load services, portfolio, team and
+                testimonials. Please enable JavaScript, or email us directly at
+                <a href="mailto:happysadmi@gmail.com">happysadmi@gmail.com</a>.
+            </p>
+        </div>
+    </noscript>
 
     <!-- ================= NAVBAR ================= -->
 
@@ -64,13 +121,13 @@
 
             <nav class="navbar">
 
-                <a href="#" class="logo">
+                <a href="#home" class="logo">
                     Happy<span>Sad</span>Mi
                 </a>
 
-                <ul class="nav-links">
+                <ul class="nav-links" id="primaryNav">
 
-                    <li><a href="#home">Home</a></li>
+                    <li><a href="#home" aria-current="true">Home</a></li>
 
                     <li><a href="#about">About</a></li>
 
@@ -88,9 +145,15 @@
 
                 </ul>
 
-                <button class="menu-btn">
+                <button
+                    class="menu-btn"
+                    id="menuBtn"
+                    type="button"
+                    aria-label="Open navigation menu"
+                    aria-expanded="false"
+                    aria-controls="primaryNav">
 
-                    <i class="fas fa-bars"></i>
+                    <i class="fas fa-bars" aria-hidden="true"></i>
 
                 </button>
 
@@ -100,9 +163,11 @@
 
     </header>
 
+    <main id="main">
+
     <!-- ================= HERO ================= -->
 
-    <section class="hero" id="home">
+    <section class="hero" id="home" aria-labelledby="heroTitle">
 
         <div class="container hero-grid">
 
@@ -112,7 +177,7 @@
                     Your Technology Partner
                 </span>
 
-                <h1>
+                <h1 id="heroTitle">
 
                     Building Digital Solutions
 
@@ -178,8 +243,11 @@
             <div class="hero-image">
 
                 <img class="bg_img"
-                    src="assets/images/team/hsm-2.png"
-                    alt="Happy Sad Mi Team">
+                    src="assets/images/team/hsm-2.webp"
+                    alt="The Happy Sad Mi team"
+                    width="500"
+                    height="500"
+                    fetchpriority="high">
 
             </div>
 
@@ -203,14 +271,14 @@
 
             <div class="about-grid">
 
-                <div>
+                <div class="about-copy">
 
                     <h3>
 
                         A Team Built Around Technology & Innovation
 
                     </h3>
-                </br>
+
                     <p>
 
                         Happy Sad Mi is a collaborative team of IT professionals
@@ -219,26 +287,27 @@
                         solutions.
 
                     </p>
-                </br>
-
-                <p>
-                    The name <strong>"HappySadMi"</strong> has a special story behind it. In our
-                    native language, the phrase is a playful expression that roughly means
-                    <em>"we're happy too."</em> At the same time, when read in English, it amusingly
-                    combines the words <strong>"Happy"</strong> and <strong>"Sad"</strong> in a single
-                    name a contrast that often makes people smile and sparks curiosity. We embraced
-                    that uniqueness because it reflects our personality as a team: we believe that
-                    even during challenging moments, there's always room for creativity, humor, and
-                    optimism while building meaningful technology.
-                </p>
-
-                <br>
 
                     <p>
-                        Our journey began in college, where we met as classmates and eventually worked together on our thesis project. Through countless hours of planning, development, testing, and problem-solving, we built not only a successful project but also a strong foundation of teamwork, communication, and collaboration. That shared experience taught us how to tackle complex challenges, adapt under pressure, and deliver solutions as a unified team.
-
+                        The name <strong>"HappySadMi"</strong> has a special story behind it. In our
+                        native language, the phrase is a playful expression that roughly means
+                        <em>"we're happy too."</em> At the same time, when read in English, it amusingly
+                        combines the words <strong>"Happy"</strong> and <strong>"Sad"</strong> in a single
+                        name — a contrast that often makes people smile and sparks curiosity. We
+                        embraced that uniqueness because it reflects our personality as a team: we
+                        believe that even during challenging moments, there's always room for
+                        creativity, humor, and optimism while building meaningful technology.
                     </p>
-                </br>
+
+                    <p>
+                        Our journey began in college, where we met as classmates and eventually
+                        worked together on our thesis project. Through countless hours of planning,
+                        development, testing, and problem-solving, we built not only a successful
+                        project but also a strong foundation of teamwork, communication, and
+                        collaboration. That shared experience taught us how to tackle complex
+                        challenges, adapt under pressure, and deliver solutions as a unified team.
+                    </p>
+
                     <p>
 
                         We combine creativity, technical expertise, and analytical
@@ -247,14 +316,12 @@
 
                     </p>
 
-                    
-
                 </div>
-            </br>
+
                 <div class="about-cards">
 
                 <div class="info-card">
-                    <i class="fas fa-lightbulb"></i>
+                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
 
                     <div class="info-content">
                         <h4>Innovation</h4>
@@ -263,7 +330,7 @@
                 </div>
 
                 <div class="info-card">
-                    <i class="fas fa-users"></i>
+                    <i class="fas fa-users" aria-hidden="true"></i>
 
                     <div class="info-content">
                         <h4>Collaboration</h4>
@@ -272,7 +339,7 @@
                 </div>
 
                 <div class="info-card">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
 
                     <div class="info-content">
                         <h4>Growth</h4>
@@ -309,101 +376,7 @@
 
             <div class="services-grid" id="servicesGrid">
 
-                <article class="service-card">
-
-                    <div class="service-icon web">
-                       <i class="fas fa-laptop-code" style="color:red; font-size:50px;"></i>
-                    </div>
-
-                    <h3>Web Development</h3>
-
-                    <p>
-                        Responsive business websites, landing pages,
-                        admin dashboards, and custom web applications.
-                    </p>
-
-                    <ul>
-
-                        <li>Responsive Design</li>
-                        <li>Modern UI/UX</li>
-                        <li>CMS Integration</li>
-                        <li>Performance Optimization</li>
-
-                    </ul>
-
-                </article>
-
-                <article class="service-card">
-
-                    <div class="service-icon software">
-                        <i class="fas fa-code"></i>
-                    </div>
-
-                    <h3>Software Development</h3>
-
-                    <p>
-                        Tailored desktop and web applications that automate
-                        workflows and solve business challenges.
-                    </p>
-
-                    <ul>
-
-                        <li>Business Systems</li>
-                        <li>Automation</li>
-                        <li>REST APIs</li>
-                        <li>Database Design</li>
-
-                    </ul>
-
-                </article>
-
-                <article class="service-card">
-
-                    <div class="service-icon analytics">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-
-                    <h3>Data Analytics</h3>
-
-                    <p>
-                        Transform raw data into meaningful insights using
-                        dashboards and business intelligence tools.
-                    </p>
-
-                    <ul>
-
-                        <li>Power BI</li>
-                        <li>Looker Studio</li>
-                        <li>Excel Dashboards</li>
-                        <li>Data Cleaning</li>
-
-                    </ul>
-
-                </article>
-
-                <article class="service-card">
-
-                    <div class="service-icon assistant">
-                        <i class="fas fa-headset"></i>
-                    </div>
-
-                    <h3>Virtual Assistance</h3>
-
-                    <p>
-                        Administrative, technical, and operational support
-                        that helps businesses focus on growth.
-                    </p>
-
-                    <ul>
-
-                        <li>Lead Generation</li>
-                        <li>Data Entry</li>
-                        <li>Email Management</li>
-                        <li>Research</li>
-
-                    </ul>
-
-                </article>
+                <!-- Rendered from data/services.json by services.js -->
 
             </div>
 
@@ -411,106 +384,6 @@
 
     </section>
 
-    <!-- ================= PROCESS ================= 
-
-    <section class="section" id="process">
-
-        <div class="container">
-
-            <div class="section-title">
-
-                <span>OUR PROCESS</span>
-
-                <h2>How We Work</h2>
-
-            </div>
-
-            <div class="process-grid">
-
-                <div class="process-card">
-
-                    <div class="step-number">01</div>
-
-                    <h3>Discovery</h3>
-
-                    <p>
-                        We understand your business, goals, and technical
-                        requirements before starting.
-                    </p>
-
-                </div>
-
-                <div class="process-card">
-
-                    <div class="step-number">02</div>
-
-                    <h3>Planning</h3>
-
-                    <p>
-                        We prepare project architecture, timelines,
-                        and deliverables.
-                    </p>
-
-                </div>
-
-                <div class="process-card">
-
-                    <div class="step-number">03</div>
-
-                    <h3>Development</h3>
-
-                    <p>
-                        Our team builds scalable, maintainable,
-                        and secure solutions.
-                    </p>
-
-                </div>
-
-                <div class="process-card">
-
-                    <div class="step-number">04</div>
-
-                    <h3>Testing</h3>
-
-                    <p>
-                        Every feature is tested thoroughly to ensure
-                        quality and reliability.
-                    </p>
-
-                </div>
-
-                <div class="process-card">
-
-                    <div class="step-number">05</div>
-
-                    <h3>Deployment</h3>
-
-                    <p>
-                        Launching your project with performance,
-                        security, and monitoring in mind.
-                    </p>
-
-                </div>
-
-                <div class="process-card">
-
-                    <div class="step-number">06</div>
-
-                    <h3>Support</h3>
-
-                    <p>
-                        Continuous maintenance, updates,
-                        and future improvements.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
--->
 
 <section class="section process-section" id="process">
 
@@ -723,25 +596,25 @@
 
             </div>
 
-            <div class="portfolio-filter">
+            <div class="portfolio-filter" role="group" aria-label="Filter projects by category">
 
-                <button class="active" data-filter="all">
+                <button type="button" class="active" data-filter="all" aria-pressed="true">
                     All
                 </button>
 
-                <button data-filter="web">
+                <button type="button" data-filter="web" aria-pressed="false">
                     Web
                 </button>
 
-                <button data-filter="software">
+                <button type="button" data-filter="software" aria-pressed="false">
                     Software
                 </button>
 
-                <button data-filter="analytics">
+                <button type="button" data-filter="analytics" aria-pressed="false">
                     Analytics
                 </button>
 
-                <button data-filter="automation">
+                <button type="button" data-filter="automation" aria-pressed="false">
                     Automation
                 </button>
 
@@ -749,133 +622,7 @@
 
             <div class="portfolio-grid" id="portfolioGrid">
 
-                <article class="project-card web">
-
-                    <img
-                        src="assets/images/portfolio/project-1.jpg"
-                        alt="TowMi Project">
-
-                    <div class="project-content">
-
-                        <span class="project-tag">
-                            Web Application
-                        </span>
-
-                        <h3>TowMi</h3>
-
-                        <p>
-                            A towing and automotive shop locator with maps,
-                            search, messaging, and shop management features.
-                        </p>
-
-                        <div class="project-tech">
-
-                            <span>Flutter</span>
-                            <span>Firebase</span>
-                            <span>Mapbox</span>
-
-                        </div>
-
-                        <div class="project-links">
-
-                            <a href="#">
-                                Live Demo
-                            </a>
-
-                            <a href="#">
-                                GitHub
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </article>
-
-                <article class="project-card analytics">
-
-                    <img
-                        src="assets/images/portfolio/project-2.jpg"
-                        alt="Analytics Dashboard">
-
-                    <div class="project-content">
-
-                        <span class="project-tag">
-                            Analytics
-                        </span>
-
-                        <h3>Business Dashboard</h3>
-
-                        <p>
-                            Interactive Power BI dashboard visualizing
-                            KPIs and business performance.
-                        </p>
-
-                        <div class="project-tech">
-
-                            <span>Power BI</span>
-                            <span>Excel</span>
-                            <span>SQL</span>
-
-                        </div>
-
-                        <div class="project-links">
-
-                            <a href="#">
-                                Preview
-                            </a>
-
-                            <a href="#">
-                                Details
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </article>
-
-                <article class="project-card software">
-
-                    <img
-                        src="assets/images/portfolio/project-3.jpg"
-                        alt="POS System">
-
-                    <div class="project-content">
-
-                        <span class="project-tag">
-                            Software
-                        </span>
-
-                        <h3>POS Management System</h3>
-
-                        <p>
-                            A desktop point-of-sale and inventory system
-                            developed for restaurant operations.
-                        </p>
-
-                        <div class="project-tech">
-
-                            <span>VB.NET</span>
-                            <span>MySQL</span>
-
-                        </div>
-
-                        <div class="project-links">
-
-                            <a href="#">
-                                Details
-                            </a>
-
-                            <a href="#">
-                                GitHub
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </article>
+                <!-- Rendered from data/portfolio.json by portfolio.js -->
 
             </div>
 
@@ -902,18 +649,9 @@
 
             </div>
 
-            <div class="team-slider">
+            <div class="team-gallery" id="teamGrid">
 
-                
-
-                <div
-                    class="team-gallery" id="teamGrid">
-
-                    <!-- Loaded from team.json -->
-
-                </div>
-
-             
+                <!-- Rendered from data/team.json by team.js -->
 
             </div>
 
@@ -934,62 +672,9 @@
 
             </div>
 
-            <div class="testimonial-grid">
+            <div class="testimonial-grid" id="testimonialGrid">
 
-                <article class="testimonial-card">
-
-                    <i class="fas fa-quote-left quote-icon"></i>
-
-                    <p>
-                        Great foundations technical problem solvers
-                    </p>
-
-                    <div class="testimonial-author">
-
-                        <h4>Ben V.</h4>
-
-                        <span>Startup Founder</span>
-
-                    </div>
-
-                </article>
-
-                <article class="testimonial-card">
-
-                    <i class="fas fa-quote-left quote-icon"></i>
-
-                    <p>
-                        Their technical knowledge and attention to detail
-                        exceeded expectations.
-                    </p>
-
-                    <div class="testimonial-author">
-
-                        <h4>Norie G.V</h4>
-
-                        <span>Business Owner</span>
-
-                    </div>
-
-                </article>
-
-                <article class="testimonial-card">
-
-                    <i class="fas fa-quote-left quote-icon"></i>
-
-                    <p>
-                        Reliable, knowledgeable, and committed to delivering quality work. Highly recommended
-                    </p>
-
-                    <div class="testimonial-author">
-
-                        <h4>Martzel B.</h4>
-
-                        <span>CS Professor</span>
-
-                    </div>
-
-                </article>
+                <!-- Rendered from data/testimonials.json by testimonials.js -->
 
             </div>
 
@@ -1044,26 +729,54 @@
 
                 </div>
 
-               <form action="https://api.web3forms.com/submit" method="POST" class="contact-form">
-                     <input type="hidden" name="access_key" value="a5f0d22b-f5dd-4170-9fd6-71b0a7a1d6a9">
+                <form
+                    action="https://api.web3forms.com/submit"
+                    method="POST"
+                    class="contact-form"
+                    id="contactForm">
+
+                    <input type="hidden" name="access_key" value="a5f0d22b-f5dd-4170-9fd6-71b0a7a1d6a9">
+
+                    <!-- Honeypot: hidden from users, catches naive bots -->
+
+                    <div class="visually-hidden" aria-hidden="true">
+                        <label for="company">Company website</label>
+                        <input type="text" name="company" id="company" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <label for="name">Full Name</label>
 
                     <input
                         type="text"
+                        id="name"
                         name="name"
-                        placeholder="Full Name"
+                        autocomplete="name"
+                        placeholder="Your name"
                         required>
+
+                    <label for="email">Email Address</label>
 
                     <input
                         type="email"
+                        id="email"
                         name="email"
-                        placeholder="Email Address"
+                        autocomplete="email"
+                        placeholder="you@example.com"
                         required>
 
-                 
+                    <label for="subject">Subject</label>
+
+                    <input
+                        type="text"
+                        id="subject"
+                        name="subject"
+                        placeholder="What can we help you with?">
+
+                    <label for="message">Project Details</label>
 
                     <textarea
-                    name="message"
-                        type="text"
+                        id="message"
+                        name="message"
                         rows="6"
                         placeholder="Tell us about your project..."
                         required></textarea>
@@ -1075,6 +788,8 @@
                         Send Message
 
                     </button>
+
+                    <p class="form-note" id="formStatus" role="status" aria-live="polite"></p>
 
                 </form>
 
@@ -1088,6 +803,8 @@
 
     </section>
 
+    </main>
+
     <!-- ================= FOOTER ================= -->
 
     <footer class="footer">
@@ -1098,7 +815,7 @@
 
                 <div>
 
-                    <h3>Happy Sad Mi</h3>
+                    <h2 class="footer-brand">Happy Sad Mi</h2>
 
                     <p>
 
@@ -1107,11 +824,15 @@
 
                     </p>
 
+                    <p>
+                        <a href="mailto:happysadmi@gmail.com">happysadmi@gmail.com</a>
+                    </p>
+
                 </div>
 
-                <div>
+                <nav aria-label="Services">
 
-                    <h4>Services</h4>
+                    <h3 class="footer-heading">Services</h3>
 
                     <ul>
 
@@ -1121,19 +842,23 @@
 
                         <li><a href="#services">Data Analytics</a></li>
 
+                        <li><a href="#services">Technical Support</a></li>
+
                         <li><a href="#services">Virtual Assistance</a></li>
 
                     </ul>
 
-                </div>
+                </nav>
 
-                <div>
+                <nav aria-label="Company">
 
-                    <h4>Company</h4>
+                    <h3 class="footer-heading">Company</h3>
 
                     <ul>
 
                         <li><a href="#about">About</a></li>
+
+                        <li><a href="#process">Process</a></li>
 
                         <li><a href="#portfolio">Portfolio</a></li>
 
@@ -1143,27 +868,7 @@
 
                     </ul>
 
-                </div>
-
-                <div>
-<!--
-<h4>Follow Us</h4>
-
-                    <div class="footer-social">
-
-                        <a href="#"><i class="fab fa-github"></i></a>
-
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
-
-                        <a href="#"><i class="fas fa-envelope"></i></a>
-
-                    </div>
-
--->
-                    
-                </div>
+                </nav>
 
             </div>
 
@@ -1171,7 +876,7 @@
 
                 <p>
 
-                    © 2026 Happy Sad Mi. All rights reserved.
+                    &copy; 2026 Happy Sad Mi. All rights reserved.
 
                 </p>
 
@@ -1186,9 +891,10 @@
     <button
         id="backToTop"
         class="back-to-top"
-        aria-label="Back to Top">
+        type="button"
+        aria-label="Back to top">
 
-        <i class="fas fa-chevron-up"></i>
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
 
     </button>
 
@@ -1196,24 +902,34 @@
 
 <div
     class="modal"
-    id="projectModal">
+    id="projectModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalTitle"
+    aria-describedby="modalDescription"
+    hidden>
 
     <div class="modal-overlay"></div>
 
-    <div class="modal-content">
+    <div
+        class="modal-content"
+        role="document"
+        tabindex="-1">
 
         <button
             class="modal-close"
-            id="closeModal">
+            id="closeModal"
+            type="button"
+            aria-label="Close project details">
 
-            <i class="fas fa-times"></i>
+            <i class="fas fa-times" aria-hidden="true"></i>
 
         </button>
 
         <img
             id="modalImage"
             src=""
-            alt="Project">
+            alt="">
 
         <div class="modal-body">
 
@@ -1289,12 +1005,12 @@
 
     <!-- ================= JAVASCRIPT ================= -->
 
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/animations.js"></script>
-    <script src="assets/js/portfolio.js"></script>
-    <script src="assets/js/services.js"></script>
-    <script src="assets/js/team.js"></script>
-    <script src="assets/js/testimonials.js"></script>
+    <script src="assets/js/app.js?v=6"></script>
+    <script src="assets/js/animations.js?v=6"></script>
+    <script src="assets/js/portfolio.js?v=6"></script>
+    <script src="assets/js/services.js?v=6"></script>
+    <script src="assets/js/team.js?v=6"></script>
+    <script src="assets/js/testimonials.js?v=6"></script>
 
 </body>
 

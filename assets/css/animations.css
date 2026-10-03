@@ -126,61 +126,15 @@
     60% {
         transform: translateY(-5px);
     }
-}
-
-/* ===========================
-   SCROLL REVEAL
-=========================== */
-
-.reveal {
-
-    opacity: 0;
-    transform: translateY(40px);
-    transition:
-        opacity .8s ease,
-        transform .8s ease;
 
 }
-
-.reveal.active {
-
-    opacity: 1;
-    transform: translateY(0);
-
-}
-
-/* Animation Variants */
-
-.fade-up.active {
-    animation: fadeUp .8s ease forwards;
-}
-
-.fade-down.active {
-    animation: fadeDown .8s ease forwards;
-}
-
-.fade-left.active {
-    animation: fadeLeft .8s ease forwards;
-}
-
-.fade-right.active {
-    animation: fadeRight .8s ease forwards;
-}
-
-.zoom-in.active {
-    animation: zoomIn .7s ease forwards;
-}
-
 /* ===========================
    HERO
 =========================== */
 
-.hero-image img {
-
-    animation:
-        float 6s ease-in-out infinite;
-
-}
+/* The float animation lives on the wrapper (see style.css) so the image
+   keeps its own hover transform -- an animated transform cannot be
+   overridden by a :hover rule. */
 
 .badge {
 
@@ -272,9 +226,7 @@
 =========================== */
 
 .service-icon i,
-.tech-card i,
-.social-links a,
-.footer-social a {
+.tech-card i {
 
     transition:
         transform .3s ease,
@@ -288,12 +240,7 @@
 
 }
 
-.social-links a:hover,
-.footer-social a:hover {
 
-    transform: translateY(-5px);
-
-}
 
 /* ===========================
    PORTFOLIO
@@ -436,27 +383,6 @@
 
     box-shadow:
         0 0 0 4px rgba(59,130,246,.15);
-
-}
-
-/* ===========================
-   LOADING PLACEHOLDER
-=========================== */
-
-.loading {
-
-    background:
-        linear-gradient(
-            90deg,
-            #eeeeee 25%,
-            #f7f7f7 50%,
-            #eeeeee 75%
-        );
-
-    background-size: 400px 100%;
-
-    animation:
-        shimmer 1.5s linear infinite;
 
 }
 

@@ -1,7 +1,10 @@
 /* ==========================================================
    Happy Sad Mi
    portfolio.js
-========================================================== */
+
+   Loads data/portfolio.json, renders the project grid, handles
+   category filtering and owns the project detail dialog.
+   ========================================================== */
 
 const portfolioGrid = document.getElementById("portfolioGrid");
 const filterButtons = document.querySelectorAll(".portfolio-filter button");
@@ -9,9 +12,12 @@ const filterButtons = document.querySelectorAll(".portfolio-filter button");
 let portfolioProjects = [];
 let activeFilter = "all";
 
+/* Element that triggered the dialog, so focus can be restored on close */
+let lastFocusedElement = null;
+
 /* ==========================================================
    INITIALIZE
-========================================================== */
+   ========================================================== */
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -23,21 +29,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 /* ==========================================================
    LOAD JSON
-========================================================== */
+   ========================================================== */
 
 async function loadPortfolio() {
 
+    if (!portfolioGrid) return;
+
     try {
 
-        const response = await fetch("data/portfolio.json");
-
-        if (!response.ok) {
-
-            throw new Error("Unable to load portfolio.");
-
-        }
-
-        portfolioProjects = await response.json();
+        portfolioProjects = await loadJSON("portfolio.json");
 
         renderPortfolio();
 
@@ -47,17 +47,7 @@ async function loadPortfolio() {
 
         console.error(error);
 
-        portfolioGrid.innerHTML = `
-
-            <div class="portfolio-error">
-
-                <h3>Unable to load projects.</h3>
-
-                <p>Please check portfolio.json</p>
-
-            </div>
-
-        `;
+        renderFallback(portfolioGrid, "Unable to load projects. Please check portfolio.json.");
 
     }
 
@@ -65,122 +55,120 @@ async function loadPortfolio() {
 
 /* ==========================================================
    RENDER PROJECTS
-========================================================== */
+   ========================================================== */
 
 function renderPortfolio() {
 
     if (!portfolioGrid) return;
 
-    portfolioGrid.innerHTML = "";
-
     const filteredProjects = portfolioProjects.filter(project => {
 
-        if (activeFilter === "all") {
-
-            return true;
-
-        }
-
-        return project.category === activeFilter;
+        return activeFilter === "all" || project.category === activeFilter;
 
     });
 
     if (filteredProjects.length === 0) {
 
-        portfolioGrid.innerHTML = `
-
-            <div class="portfolio-empty">
-
-                <h3>No projects found.</h3>
-
-            </div>
-
-        `;
+        portfolioGrid.replaceChildren(
+            createElement("div", {
+                className: "portfolio-empty",
+                text: "No projects found in this category yet."
+            })
+        );
 
         return;
 
     }
 
-    filteredProjects.forEach(project => {
+    portfolioGrid.replaceChildren(
+        ...filteredProjects.map(createProjectCard)
+    );
 
-        portfolioGrid.appendChild(createProjectCard(project));
-
-    });
+    // Cards arrive after DOMContentLoaded, so register them with
+    // the scroll-reveal observer.
+    observeRevealTargets();
 
 }
 
 /* ==========================================================
    CREATE CARD
-========================================================== */
+   ========================================================== */
 
 function createProjectCard(project) {
 
-    const article = document.createElement("article");
+    const article = createElement("article", { className: "project-card" });
 
-    article.className = "project-card";
+    article.appendChild(
+        createElement("img", {
+            attrs: {
+                src: project.image,
+                alt: `${project.title} screenshot`,
+                loading: "lazy"
+            }
+        })
+    );
 
-    article.innerHTML = `
+    const content = createElement("div", { className: "project-content" });
 
-        <img
-            src="${project.image}"
-            alt="${project.title}">
+    content.appendChild(
+        createElement("span", {
+            className: "project-tag",
+            text: capitalize(project.category)
+        })
+    );
 
-        <div class="project-content">
+    content.appendChild(createElement("h3", { text: project.title }));
 
-            <span
-                class="project-tag">
+    content.appendChild(
+        createElement("p", { text: project.shortDescription })
+    );
 
-                ${capitalize(project.category)}
+    const tech = createElement("div", { className: "project-tech" });
 
-            </span>
+    project.technologies.forEach(item => {
 
-            <h3>
+        tech.appendChild(createElement("span", { text: item }));
 
-                ${project.title}
+    });
 
-            </h3>
+    content.appendChild(tech);
 
-            <p>
+    const links = createElement("div", { className: "project-links" });
 
-                ${project.shortDescription}
+    if (project.demo) {
 
-            </p>
+        links.appendChild(createExternalLink(project.demo, "Live Demo", project.title));
 
-            <div class="project-tech">
+    }
 
-                ${project.technologies
-                    .map(tech => `<span>${tech}</span>`)
-                    .join("")}
+    if (project.github) {
 
-            </div>
+        links.appendChild(createExternalLink(project.github, "GitHub", project.title));
 
-            <div class="project-links">
+    }
 
-                ${createButton(project.demo, "Live Demo")}
+    const detailsBtn = createElement("button", {
+        className: "details-btn",
+        attrs: { type: "button", "aria-haspopup": "dialog" }
+    });
 
-                ${createButton(project.github, "GitHub")}
+    // Visible text stays the accessible name; the extra context is added
+    // in a visually-hidden span so label-in-name is satisfied.
+    detailsBtn.append(
+        document.createTextNode("Details"),
+        createElement("span", {
+            className: "visually-hidden",
+            text: ` for ${project.title}`
+        })
+    );
 
-                <button
-                    class="details-btn"
-                    data-id="${project.id}">
+    detailsBtn.addEventListener("click", () => showProjectModal(project));
 
-                    Details
+    links.appendChild(detailsBtn);
 
-                </button>
+    content.appendChild(links);
 
-            </div>
-
-        </div>
-
-    `;
-
-    article
-        .querySelector(".details-btn")
-        .addEventListener("click", () => {
-
-            showProjectModal(project);
-
-        });
+    article.appendChild(content);
 
     return article;
 
@@ -188,7 +176,7 @@ function createProjectCard(project) {
 
 /* ==========================================================
    FILTERS
-========================================================== */
+   ========================================================== */
 
 function initializeFilters() {
 
@@ -198,11 +186,12 @@ function initializeFilters() {
 
             filterButtons.forEach(btn => {
 
-                btn.classList.remove("active");
+                const isActive = btn === button;
+
+                btn.classList.toggle("active", isActive);
+                btn.setAttribute("aria-pressed", String(isActive));
 
             });
-
-            button.classList.add("active");
 
             activeFilter = button.dataset.filter;
 
@@ -215,146 +204,159 @@ function initializeFilters() {
 }
 
 /* ==========================================================
-   BUTTON
-========================================================== */
+   LINKS
+   ========================================================== */
 
-function createButton(url, text) {
+function createExternalLink(url, text, projectTitle) {
 
-    if (!url || url.trim() === "") {
+    const link = createElement("a", {
+        attrs: {
+            href: url,
+            target: "_blank",
+            rel: "noopener noreferrer"
+        }
+    });
 
-        return "";
+    // The visible text is the accessible name; context is appended in a
+    // visually-hidden span so the accessible name still starts with it.
+    link.append(
+        document.createTextNode(text),
+        createElement("span", {
+            className: "visually-hidden",
+            text: ` for ${projectTitle} (opens in a new tab)`
+        })
+    );
 
-    }
-
-    return `
-
-        <a
-            href="${url}"
-            target="_blank"
-            rel="noopener noreferrer">
-
-            ${text}
-
-        </a>
-
-    `;
+    return link;
 
 }
 
 /* ==========================================================
    MODAL
-========================================================== */
+   ========================================================== */
 
-function showProjectModal(project){
+const modal = document.getElementById("projectModal");
 
-    const modal=document.getElementById("projectModal");
+function showProjectModal(project) {
 
-    document.getElementById("modalImage").src=project.image;
+    if (!modal) return;
 
-    document.getElementById("modalTitle").textContent=project.title;
+    lastFocusedElement = document.activeElement;
 
-    document.getElementById("modalCategory").textContent=capitalize(project.category);
+    const image = document.getElementById("modalImage");
 
-    document.getElementById("modalDescription").textContent=project.description;
+    image.src = project.image;
+    image.alt = `${project.title} screenshot`;
 
-    document.getElementById("modalRole").textContent=project.role;
+    document.getElementById("modalTitle").textContent = project.title;
 
-    document.getElementById("modalClient").textContent=project.client;
+    document.getElementById("modalCategory").textContent =
+        capitalize(project.category);
 
-    document.getElementById("modalYear").textContent=project.year;
+    document.getElementById("modalDescription").textContent = project.description;
 
-    document.getElementById("modalStatus").textContent=project.status;
+    document.getElementById("modalRole").textContent = project.role || "—";
+    document.getElementById("modalClient").textContent = project.client || "—";
+    document.getElementById("modalYear").textContent = project.year || "—";
+    document.getElementById("modalStatus").textContent = project.status || "—";
 
-    const tech=document.getElementById("modalTech");
+    const tech = document.getElementById("modalTech");
 
-    tech.innerHTML="";
+    tech.replaceChildren(
+        ...project.technologies.map(item => createElement("span", { text: item }))
+    );
 
-    project.technologies.forEach(item=>{
+    const buttons = document.getElementById("modalButtons");
 
-        const span=document.createElement("span");
+    buttons.replaceChildren(
+        ...[
+            project.github ? createExternalLink(project.github, "GitHub", project.title) : null,
+            project.demo ? createExternalLink(project.demo, "Live Demo", project.title) : null
+        ].filter(Boolean)
+    );
 
-        span.textContent=item;
-
-        tech.appendChild(span);
-
-    });
-
-    const buttons=document.getElementById("modalButtons");
-
-    buttons.innerHTML="";
-
-    if(project.github){
-
-        buttons.innerHTML+=`
-            <a href="${project.github}"
-               target="_blank">
-               GitHub
-            </a>
-        `;
-
-    }
-
-    if(project.demo){
-
-        buttons.innerHTML+=`
-            <a href="${project.demo}"
-               target="_blank">
-               Live Demo
-            </a>
-        `;
-
-    }
-
+    modal.hidden = false;
     modal.classList.add("show");
 
-}
+    // Prevent the page behind the dialog from scrolling
+    document.body.classList.add("modal-open");
 
-/* ==========================================================
-   UTILITIES
-========================================================== */
+    // Move focus inside the dialog
+    const panel = modal.querySelector(".modal-content");
 
-function capitalize(text) {
-
-    return text.charAt(0).toUpperCase() +
-
-        text.slice(1);
+    if (panel) panel.focus();
 
 }
 
-/* ===========================================
-   CLOSE MODAL
-=========================================== */
+function closeProjectModal() {
 
-const modal=document.getElementById("projectModal");
+    if (!modal) return;
 
-const closeBtn=document.getElementById("closeModal");
+    modal.classList.remove("show");
+    modal.hidden = true;
 
-if(closeBtn){
+    document.body.classList.remove("modal-open");
 
-    closeBtn.onclick=()=>{
+    // Return focus to whatever opened the dialog
+    if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
 
-        modal.classList.remove("show");
+        lastFocusedElement.focus();
 
-    };
-
-}
-
-if(modal){
-
-    modal.querySelector(".modal-overlay").onclick=()=>{
-
-        modal.classList.remove("show");
-
-    };
+    }
 
 }
 
-document.addEventListener("keydown",e=>{
+/* Close via the X button */
+document.getElementById("closeModal")?.addEventListener("click", closeProjectModal);
 
-    if(e.key==="Escape"){
+/* Close via the overlay */
+modal?.querySelector(".modal-overlay")?.addEventListener("click", closeProjectModal);
 
-        modal?.classList.remove("show");
+/* Close via Escape, keeping Tab focus inside the dialog */
+document.addEventListener("keydown", event => {
+
+    if (!modal || !modal.classList.contains("show")) return;
+
+    if (event.key === "Escape") {
+
+        closeProjectModal();
+        return;
+
+    }
+
+    if (event.key !== "Tab") return;
+
+    const focusable = modal.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+
+        event.preventDefault();
+        last.focus();
+
+    } else if (!event.shiftKey && document.activeElement === last) {
+
+        event.preventDefault();
+        first.focus();
 
     }
 
 });
+
+/* ==========================================================
+   UTILITIES
+   ========================================================== */
+
+function capitalize(text) {
+
+    if (!text) return "";
+
+    return text.charAt(0).toUpperCase() + text.slice(1);
+
+}

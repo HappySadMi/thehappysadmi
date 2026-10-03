@@ -1,7 +1,15 @@
 /* ==========================================================
    Happy Sad Mi
    app.js
-========================================================== */
+
+   Core UI behaviour: mobile menu, smooth scroll, sticky navbar,
+   active navigation and back-to-top. Also exposes the shared
+   loadJSON() helper used by the content renderers.
+   ========================================================== */
+
+/* Offset applied to anchor targets so the fixed header does not
+   cover the heading you just jumped to. Must match --header-height. */
+const HEADER_OFFSET = 90;
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -14,48 +22,144 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ==========================================================
+   SHARED HELPERS
+   ========================================================== */
+
+/* Fetches a JSON file from data/ and resolves with the parsed array.
+   Throws with a readable message so callers can log something useful. */
+async function loadJSON(file) {
+
+    const response = await fetch(`data/${file}`);
+
+    if (!response.ok) {
+
+        throw new Error(`Unable to load data/${file} (HTTP ${response.status})`);
+
+    }
+
+    return response.json();
+
+}
+
+/* Creates an element with optional class, text and attributes.
+   Prefer this over innerHTML when inserting any value that came
+   from a data file. */
+function createElement(tag, options = {}) {
+
+    const el = document.createElement(tag);
+
+    if (options.className) el.className = options.className;
+
+    if (options.text != null) el.textContent = options.text;
+
+    if (options.html != null) el.innerHTML = options.html;
+
+    if (options.attrs) {
+
+        Object.entries(options.attrs).forEach(([key, value]) => {
+
+            if (value == null) return;
+
+            el.setAttribute(key, value);
+
+        });
+
+    }
+
+    if (options.children) {
+
+        options.children.forEach(child => el.appendChild(child));
+
+    }
+
+    return el;
+
+}
+
+/* Renders a friendly message inside a container when data fails to load. */
+function renderFallback(container, message) {
+
+    if (!container) return;
+
+    container.replaceChildren(
+        createElement("p", { className: "portfolio-error", text: message })
+    );
+
+}
+
+/* ==========================================================
    MOBILE MENU
-========================================================== */
+   ========================================================== */
 
 function initMobileMenu() {
 
-    const menuBtn = document.querySelector(".menu-btn");
+    const menuBtn = document.getElementById("menuBtn");
     const navLinks = document.querySelector(".nav-links");
 
     if (!menuBtn || !navLinks) return;
 
+    const icon = menuBtn.querySelector("i");
+
+    function setOpen(open) {
+
+        navLinks.classList.toggle("mobile-open", open);
+
+        menuBtn.setAttribute("aria-expanded", String(open));
+
+        menuBtn.setAttribute(
+            "aria-label",
+            open ? "Close navigation menu" : "Open navigation menu"
+        );
+
+        if (!icon) return;
+
+        icon.classList.toggle("fa-bars", !open);
+        icon.classList.toggle("fa-times", open);
+
+    }
+
     menuBtn.addEventListener("click", () => {
 
-        navLinks.classList.toggle("mobile-open");
+        const open = !navLinks.classList.contains("mobile-open");
 
-        const icon = menuBtn.querySelector("i");
+        setOpen(open);
 
-        if (navLinks.classList.contains("mobile-open")) {
+        // Move focus into the panel so keyboard users land on the links
+        if (open) navLinks.querySelector("a")?.focus();
 
-            icon.classList.remove("fa-bars");
-            icon.classList.add("fa-times");
+    });
 
-        } else {
+    navLinks.querySelectorAll("a").forEach(link => {
 
-            icon.classList.remove("fa-times");
-            icon.classList.add("fa-bars");
+        link.addEventListener("click", () => setOpen(false));
+
+    });
+
+    document.addEventListener("keydown", event => {
+
+        if (event.key === "Escape" && navLinks.classList.contains("mobile-open")) {
+
+            setOpen(false);
+            menuBtn.focus();
 
         }
 
     });
 
-    document.querySelectorAll(".nav-links a").forEach(link => {
+    document.addEventListener("click", event => {
 
-        link.addEventListener("click", () => {
+        if (!navLinks.classList.contains("mobile-open")) return;
 
-            navLinks.classList.remove("mobile-open");
+        if (navLinks.contains(event.target) || menuBtn.contains(event.target)) return;
 
-            const icon = menuBtn.querySelector("i");
+        setOpen(false);
 
-            icon.classList.remove("fa-times");
-            icon.classList.add("fa-bars");
+    });
 
-        });
+    // Close the panel if the viewport grows back to desktop widths
+    window.addEventListener("resize", () => {
+
+        if (window.innerWidth > 768) setOpen(false);
 
     });
 
@@ -63,28 +167,37 @@ function initMobileMenu() {
 
 /* ==========================================================
    SMOOTH SCROLL
-========================================================== */
+   ========================================================== */
 
 function initSmoothScroll() {
 
-    const links = document.querySelectorAll('a[href^="#"]');
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
 
-    links.forEach(link => {
+        link.addEventListener("click", function (event) {
 
-        link.addEventListener("click", function (e) {
+            const hash = this.getAttribute("href");
 
-            const target = document.querySelector(this.getAttribute("href"));
+            // In-page anchors only; leave bare "#" and real URLs alone
+            if (!hash || hash === "#") return;
+
+            const target = document.querySelector(hash);
 
             if (!target) return;
 
-            e.preventDefault();
+            event.preventDefault();
 
-            target.scrollIntoView({
+            const top = target.getBoundingClientRect().top
+                + window.scrollY
+                - HEADER_OFFSET;
 
-                behavior: "smooth",
-                block: "start"
+            window.scrollTo({ top, behavior: "smooth" });
 
-            });
+            // Keep the keyboard focus with the visual jump
+            target.setAttribute("tabindex", "-1");
+            target.focus({ preventScroll: true });
+
+            // Reflect the jump in the address bar without a second scroll
+            if (history.replaceState) history.replaceState(null, "", hash);
 
         });
 
@@ -94,7 +207,7 @@ function initSmoothScroll() {
 
 /* ==========================================================
    STICKY NAVBAR
-========================================================== */
+   ========================================================== */
 
 function initStickyNavbar() {
 
@@ -104,52 +217,56 @@ function initStickyNavbar() {
 
     window.addEventListener("scroll", () => {
 
-        if (window.scrollY > 40) {
+        header.classList.toggle("scrolled", window.scrollY > 40);
 
-            header.classList.add("scrolled");
-
-        } else {
-
-            header.classList.remove("scrolled");
-
-        }
-
-    });
+    }, { passive: true });
 
 }
 
 /* ==========================================================
    ACTIVE NAVIGATION
-========================================================== */
+   ========================================================== */
 
 function initActiveNavigation() {
 
     const sections = document.querySelectorAll("section[id]");
     const navLinks = document.querySelectorAll(".nav-links a");
 
+    if (!sections.length || !navLinks.length) return;
+
     function updateActive() {
 
-        const scrollPos = window.scrollY + 120;
+        const scrollPos = window.scrollY + HEADER_OFFSET + 20;
+
+        let currentId = null;
 
         sections.forEach(section => {
 
             const top = section.offsetTop;
             const height = section.offsetHeight;
-            const id = section.getAttribute("id");
 
             if (scrollPos >= top && scrollPos < top + height) {
 
-                navLinks.forEach(link => {
+                currentId = section.getAttribute("id");
 
-                    link.classList.remove("active");
+            }
 
-                    if (link.getAttribute("href") === "#" + id) {
+        });
 
-                        link.classList.add("active");
+        // Nothing matched (e.g. inside the footer) -> clear the highlight
+        navLinks.forEach(link => {
 
-                    }
+            const isActive = link.getAttribute("href") === `#${currentId}`;
 
-                });
+            link.classList.toggle("active", isActive);
+
+            if (isActive) {
+
+                link.setAttribute("aria-current", "true");
+
+            } else {
+
+                link.removeAttribute("aria-current");
 
             }
 
@@ -157,7 +274,8 @@ function initActiveNavigation() {
 
     }
 
-    window.addEventListener("scroll", updateActive);
+    window.addEventListener("scroll", updateActive, { passive: true });
+    window.addEventListener("resize", updateActive);
 
     updateActive();
 
@@ -165,7 +283,7 @@ function initActiveNavigation() {
 
 /* ==========================================================
    BACK TO TOP
-========================================================== */
+   ========================================================== */
 
 function initBackToTop() {
 
@@ -175,49 +293,14 @@ function initBackToTop() {
 
     window.addEventListener("scroll", () => {
 
-        if (window.scrollY > 500) {
+        button.classList.toggle("show", window.scrollY > 500);
 
-            button.classList.add("show");
-
-        } else {
-
-            button.classList.remove("show");
-
-        }
-
-    });
+    }, { passive: true });
 
     button.addEventListener("click", () => {
 
-        window.scrollTo({
-
-            top: 0,
-            behavior: "smooth"
-
-        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
 
     });
-
-}
-
-/* ==========================================================
-   UTILITY
-========================================================== */
-
-function debounce(fn, delay = 100) {
-
-    let timeout;
-
-    return (...args) => {
-
-        clearTimeout(timeout);
-
-        timeout = setTimeout(() => {
-
-            fn(...args);
-
-        }, delay);
-
-    };
 
 }

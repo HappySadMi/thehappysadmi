@@ -1,7 +1,10 @@
 /* ==========================================================
    Happy Sad Mi
    testimonials.js
-========================================================== */
+
+   Renders testimonial cards (and their star ratings) from
+   data/testimonials.json.
+   ========================================================== */
 
 const testimonialGrid = document.getElementById("testimonialGrid");
 
@@ -9,97 +12,113 @@ document.addEventListener("DOMContentLoaded", () => {
     loadTestimonials();
 });
 
-async function loadTestimonials(){
+/* ==========================================================
+   LOAD TESTIMONIALS
+   ========================================================== */
 
-    if(!testimonialGrid) return;
+async function loadTestimonials() {
 
-    try{
+    if (!testimonialGrid) return;
 
-        const response = await fetch("data/testimonials.json");
+    try {
 
-        if(!response.ok){
+        const testimonials = await loadJSON("testimonials.json");
 
-            throw new Error("Unable to load testimonials.json");
+        const cards = testimonials.map(item => {
 
-        }
+            const article = createElement("article", { className: "testimonial-card" });
 
-        const testimonials = await response.json();
+            // The avatar is optional -- testimonials.json does not
+            // require a photo, so only render it when one exists.
+            if (item.photo) {
 
-        testimonialGrid.innerHTML = "";
+                article.appendChild(
+                    createElement("img", {
+                        className: "testimonial-avatar",
+                        attrs: {
+                            src: item.photo,
+                            alt: `${item.name} portrait`,
+                            loading: "lazy",
+                            width: "72",
+                            height: "72"
+                        }
+                    })
+                );
 
-        testimonials.forEach(item=>{
+            }
 
-            testimonialGrid.innerHTML += `
+            article.appendChild(
+                createElement("h3", { text: item.name })
+            );
 
-                <article class="testimonial-card">
+            const meta = [item.position, item.company].filter(Boolean).join(" • ");
 
-                    <img
-                        src="${item.photo}"
-                        alt="${item.name}"
-                        class="testimonial-avatar"
-                        loading="lazy">
+            article.appendChild(
+                createElement("span", {
+                    className: "testimonial-position",
+                    text: meta
+                })
+            );
 
-                    <h3>${item.name}</h3>
+            const stars = createElement("div", {
+                className: "testimonial-stars",
+                attrs: {
+                    role: "img",
+                    "aria-label": `Rated ${item.rating} out of 5`
+                }
+            });
 
-                    <span>
+            stars.innerHTML = generateStars(item.rating);
 
-                        ${item.position}
+            article.appendChild(stars);
 
-                        ${item.company ? ` • ${item.company}` : ""}
+            article.appendChild(
+                createElement("p", {
+                    className: "testimonial-message",
+                    text: item.message
+                })
+            );
 
-                    </span>
-
-                    <div class="testimonial-stars">
-
-                        ${generateStars(item.rating)}
-
-                    </div>
-
-                    <p>
-
-                        "${item.message}"
-
-                    </p>
-
-                </article>
-
-            `;
+            return article;
 
         });
 
+        testimonialGrid.replaceChildren(...cards);
+
+        // Cards arrive after DOMContentLoaded, so register them with
+        // the scroll-reveal observer.
+        observeRevealTargets();
+
     }
 
-    catch(error){
+    catch (error) {
 
         console.error(error);
 
-        testimonialGrid.innerHTML = `
-            <p>Unable to load testimonials.</p>
-        `;
+        renderFallback(testimonialGrid, "Unable to load testimonials.");
 
     }
 
 }
 
-/* ===========================================
+/* ==========================================================
    STAR RATING
-=========================================== */
+   ========================================================== */
 
-function generateStars(rating){
+/* Returns solid stars for the filled portion and hollow stars for
+   the remainder. The wrapper carries an aria-label so the rating is
+   not announced as a run of icon characters. */
+function generateStars(rating) {
 
-    let stars="";
+    const filled = Math.max(0, Math.min(5, Number(rating) || 0));
 
-    for(let i=1;i<=5;i++){
+    let stars = "";
 
-        if(i<=rating){
+    for (let i = 1; i <= 5; i++) {
 
-            stars+=`<i class="fas fa-star"></i>`;
-
-        }else{
-
-            stars+=`<i class="far fa-star"></i>`;
-
-        }
+        stars += i <= filled
+            ? '<i class="fas fa-star" aria-hidden="true"></i>'
+            : '<i class="far fa-star" aria-hidden="true"></i>';
 
     }
 

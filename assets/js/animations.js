@@ -1,152 +1,177 @@
 /* ==========================================================
    Happy Sad Mi
    animations.js
-========================================================== */
+
+   Scroll-triggered reveal for cards and section headings, plus
+   the numeric counter animation used by the statistics blocks.
+   Both respect prefers-reduced-motion.
+   ========================================================== */
+
+const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+).matches;
+
+/* Elements revealed on scroll. Cards rendered from JSON after
+   DOMContentLoaded are picked up by observeRevealTargets(). */
+const REVEAL_SELECTOR = [
+    ".section-title",
+    ".service-card",
+    ".process-step",
+    ".tech-card",
+    ".project-card",
+    ".team-card",
+    ".testimonial-card",
+    ".stats-card",
+    ".info-card",
+    ".contact-form",
+    ".contact-info"
+].join(", ");
+
+let revealObserver = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    initializeScrollReveal();
+    if (prefersReducedMotion) {
+
+        // Show everything immediately, no observation needed
+        document.querySelectorAll(REVEAL_SELECTOR).forEach(element => {
+
+            element.style.opacity = "1";
+            element.style.transform = "none";
+
+        });
+
+        document.querySelectorAll(".stats-card h2, .stat-card h2")
+            .forEach(counter => animateCounter(counter));
+
+        return;
+
+    }
+
+    revealObserver = new IntersectionObserver(entries => {
+
+        entries.forEach(entry => {
+
+            if (!entry.isIntersecting) return;
+
+            revealElement(entry.target);
+
+            revealObserver.unobserve(entry.target);
+
+        });
+
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+
+    observeRevealTargets();
+
     initializeCounters();
 
 });
 
 /* ==========================================================
    SCROLL REVEAL
-========================================================== */
+   ========================================================== */
 
-function initializeScrollReveal() {
+function observeRevealTargets() {
 
-    const elements = document.querySelectorAll(
-        `
-        .section-title,
-        .service-card,
-        .process-card,
-        .tech-card,
-        .project-card,
-        .team-card,
-        .testimonial-card,
-        .stats-card,
-        .info-card,
-        .contact-form,
-        .contact-info
-        `
-    );
+    if (!revealObserver) return;
 
-    const observer = new IntersectionObserver(
+    document.querySelectorAll(REVEAL_SELECTOR).forEach(element => {
 
-        (entries) => {
-
-            entries.forEach((entry, index) => {
-
-                if (!entry.isIntersecting) return;
-
-                entry.target.style.opacity = "1";
-                entry.target.style.transform = "translateY(0)";
-                entry.target.style.transition =
-                    `opacity .7s ease ${index * 0.08}s,
-                     transform .7s ease ${index * 0.08}s`;
-
-                observer.unobserve(entry.target);
-
-            });
-
-        },
-
-        {
-            threshold: 0.15
-        }
-
-    );
-
-    elements.forEach(element => {
+        // Only hide elements we have not already revealed
+        if (element.dataset.revealed === "true") return;
 
         element.style.opacity = "0";
         element.style.transform = "translateY(40px)";
+        element.dataset.revealed = "pending";
 
-        observer.observe(element);
+        revealObserver.observe(element);
 
     });
+
+}
+
+function revealElement(element) {
+
+    element.style.transition = "opacity .7s ease, transform .7s ease";
+    element.style.opacity = "1";
+    element.style.transform = "translateY(0)";
+    element.dataset.revealed = "true";
 
 }
 
 /* ==========================================================
    COUNTER ANIMATION
-========================================================== */
+   ========================================================== */
 
 function initializeCounters() {
 
-    const counters = document.querySelectorAll(
-        ".stats-card h2, .stat-card h2"
-    );
+    const counters = document.querySelectorAll(".stats-card h2, .stat-card h2");
 
     if (!counters.length) return;
 
-    const observer = new IntersectionObserver(
+    const observer = new IntersectionObserver(entries => {
 
-        (entries) => {
+        entries.forEach(entry => {
 
-            entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
 
-                if (!entry.isIntersecting) return;
+            animateCounter(entry.target);
 
-                animateCounter(entry.target);
+            observer.unobserve(entry.target);
 
-                observer.unobserve(entry.target);
+        });
 
-            });
+    }, { threshold: 0.6 });
 
-        },
-
-        {
-            threshold: 0.6
-        }
-
-    );
-
-    counters.forEach(counter => {
-
-        observer.observe(counter);
-
-    });
+    counters.forEach(counter => observer.observe(counter));
 
 }
 
 function animateCounter(element) {
 
-    const original = element.textContent;
+    // Only animate once per element
+    if (element.dataset.counted === "true") return;
 
-    const target = parseInt(original.replace(/\D/g, ""));
+    element.dataset.counted = "true";
+
+    const original = element.textContent.trim();
+
+    const target = parseInt(original.replace(/\D/g, ""), 10);
 
     if (isNaN(target)) return;
 
     const suffix = original.replace(/[0-9]/g, "");
 
-    let current = 0;
+    // Under reduced motion we already showed the real value
+    if (prefersReducedMotion) {
 
-    const duration = 1800;
-
-    const increment = target / (duration / 16);
-
-    function update() {
-
-        current += increment;
-
-        if (current >= target) {
-
-            element.textContent = target + suffix;
-
-            return;
-
-        }
-
-        element.textContent =
-            Math.floor(current) + suffix;
-
-        requestAnimationFrame(update);
+        element.textContent = target + suffix;
+        return;
 
     }
 
-    element.textContent = "0";
+    const duration = 1800;
+
+    let startTime = null;
+
+    element.textContent = `0${suffix}`;
+
+    function update(timestamp) {
+
+        // Bind the start time on the first frame
+        if (startTime === null) startTime = timestamp;
+
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+
+        // Ease-out so the number decelerates instead of stopping dead
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        element.textContent = Math.floor(target * eased) + suffix;
+
+        if (progress < 1) requestAnimationFrame(update);
+
+    }
 
     requestAnimationFrame(update);
 
