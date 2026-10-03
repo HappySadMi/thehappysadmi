@@ -1,0 +1,14 @@
+# Worker secrets / local overrides
+#
+# Copy to `.dev.vars` (git-ignored) for local development.
+# `.dev.vars` must NEVER be committed.
+#
+# NOTE: Phase 1 stores no secrets. There is no API key because Workers AI
+# is called by the Worker itself. This file exists for future phases.
+
+# Uncomment to point local dev at a fixture instead of the live site.
+# SITE_URL=http://127.0.0.1:8766
+
+# Comma-separated browser origins allowed to call the Worker.
+# This is the browser ORIGIN (scheme + host), never a path.
+# ALLOWED_ORIGINS=https://happysadmi.github.io
