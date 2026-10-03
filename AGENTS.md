@@ -34,10 +34,12 @@ assets/
                         navbar, hero, about, process, footer, responsive
     components.css      Reusable components (cards, forms, modal, states)
     animations.css      @keyframes, hover states, reduced-motion fallback
+    chat.css            Chat assistant widget (launcher, panel, composer)
   js/
     app.js              Mobile menu, smooth scroll, sticky navbar, active nav,
                         back-to-top, PLUS shared loadJSON()/createElement()/renderFallback()
     animations.js       IntersectionObserver scroll reveal + stat counters
+    chat.js             Chat assistant widget, injected at runtime
     consent.js          Analytics consent gate (Consent Mode v2)
     portfolio.js        Portfolio grid, filters, project dialog (owns modal state)
     services.js         Services grid
@@ -50,6 +52,9 @@ data/
   services.json         Services
   team.json             Team members
   testimonials.json     Testimonials
+
+worker/                  Cloudflare Worker backing the chat assistant (its own
+                        deploy pipeline, `npx wrangler`, separate from Pages)
 ```
 
 ## Critical Architecture Rules
@@ -76,9 +81,11 @@ Failures are caught and render a short message in place, so a JSON error looks l
 
 Each file declares top-level `const`s (`teamGrid`, `portfolioGrid`, `servicesGrid`, `testimonialGrid`, `modal`) and top-level functions. There is no `type="module"` and no import/export.
 
+`chat.js` is the one exception: it is loaded with `defer` and deliberately keeps its own local `createElement()` so a failure in the other scripts cannot take the widget down with them.
+
 Consequences:
 - Files share a global namespace. Do not introduce duplicate identifiers.
-- `app.js` must load first — it defines `loadJSON()`, `createElement()`, and `renderFallback()`, which every renderer depends on. The `<script>` order at the bottom of `<body>` is `app.js`, `animations.js`, `portfolio.js`, `services.js`, `team.js`, `testimonials.js`.
+- `app.js` must load first — it defines `loadJSON()`, `createElement()`, and `renderFallback()`, which every renderer depends on. The `<script>` order at the bottom of `<body>` is `app.js`, `animations.js`, `portfolio.js`, `services.js`, `team.js`, `testimonials.js`, `chat.js`.
 - Adding `type="module"` would defer execution and break top-level `getElementById` calls (`portfolio.js` reads `modal` at parse time, `team.js` reads `teamGrid` at parse time). If you convert, move those inside `DOMContentLoaded`.
 
 ### 4. Cache-bust query strings are manual
@@ -109,10 +116,20 @@ Verified behaviour:
 ### 6. CSS load order is significant
 
 ```
-style.css  →  components.css  →  animations.css
+style.css  →  components.css  →  animations.css  →  chat.css
 ```
 
-`animations.css` loads last, so its hover/transition declarations win. Preserve this order.
+`animations.css` loads after `components.css`, so its hover/transition declarations win. `chat.css` loads last because it also has to override `.back-to-top`'s `bottom`, which is declared in `style.css`. Preserve this order.
+
+### 6b. Bottom-right floating controls
+
+Three things are fixed to the bottom-right of the viewport: `.back-to-top` (declared in `style.css`), `.chat-launcher`, and `.chat-panel`. The consent banner is fixed to the bottom edge and will cover them.
+
+`chat.js` measures the banner and publishes it as `--consent-height` on `<html>` (`0px` when the banner is closed). `chat.css` folds that into the `bottom` and `height` of all three. **Do not gate these offsets on `body.has-consent-banner`** — that class silently failed to apply once, leaving the launcher underneath the banner.
+
+The panel's height must account for its own bottom offset as well as the banner. Getting that wrong let the panel's top edge go to `-22px`, clipping the header off the top of the screen.
+
+The panel is a column flexbox. `.chat-log` needs `min-height: 0` or it refuses to shrink below its content and pushes the composer out of the panel.
 
 ### 7. Design tokens live in `:root` (`assets/css/style.css`)
 

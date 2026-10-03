@@ -4,6 +4,13 @@
 
 /* ---------- Launcher ---------- */
 
+/* Lift clear of the consent banner.
+
+   --consent-height is measured by chat.js and is 0px while the banner is
+   closed, so these offsets need no conditional class of their own. An
+   earlier version keyed off body.has-consent-banner, which meant the
+   offsets silently stopped applying whenever that class failed to land. */
+
 .chat-launcher{
 
     position:fixed;
@@ -11,10 +18,8 @@
     right:30px;
 
     /* Stacked ABOVE .back-to-top, which sits at bottom:30px and is 50px
-       tall. Without this the two controls overlap. --floating-offset also
-       accounts for the consent banner when it is open, so neither control
-       ends up hidden behind it. */
-    bottom:calc(30px + 50px + 16px);
+       tall. Without this the two controls overlap. */
+    bottom:calc(30px + 50px + 16px + var(--consent-height, 0px));
 
     z-index:1001;
 
@@ -58,22 +63,16 @@
 
 }
 
-/* Lift both floating controls clear of the consent banner */
+/* ---------- Panel ---------- */
 
-body.has-consent-banner .chat-launcher,
-body.has-consent-banner .back-to-top{
+/* The back-to-top button is declared in style.css at a fixed bottom:30px.
+   It is covered by the consent banner, so it needs the same lift. */
 
-    bottom:calc(30px + 50px + 16px + var(--consent-height, 0px));
-
-}
-
-body.has-consent-banner .back-to-top{
+.back-to-top{
 
     bottom:calc(30px + var(--consent-height, 0px));
 
 }
-
-/* ---------- Panel ---------- */
 
 .chat-panel{
 
@@ -81,13 +80,17 @@ body.has-consent-banner .back-to-top{
 
     right:30px;
 
-    bottom:calc(30px + 50px + 16px + 66px);
+    bottom:calc(30px + 50px + 16px + 66px + var(--consent-height, 0px));
 
     z-index:1001;
 
     width:min(400px, calc(100vw - 32px));
 
-    height:min(580px, calc(100vh - 140px));
+    /* The bottom offset above is 162px plus the consent banner, so 178px
+       leaves a 16px gap under the top edge. The earlier value of 140px was
+       smaller than the bottom offset, which let the panel's top edge go
+       negative on short laptop viewports and clipped the header. */
+    height:min(580px, calc(100vh - 178px - var(--consent-height, 0px)));
 
     display:flex;
 
@@ -220,6 +223,12 @@ body.has-consent-banner .back-to-top{
 
     flex:1;
 
+    /* Required for a flex child to shrink below its content. Without it the
+       automatic minimum size is the greeting bubble's height, the log
+       refuses to compress, and the composer below it gets pushed out of the
+       panel and clipped on short screens. */
+    min-height:0;
+
     overflow-y:auto;
 
     overscroll-behavior:contain;
@@ -336,11 +345,22 @@ body.has-consent-banner .back-to-top{
 
 }
 
+/* Once the visitor has asked something the chips have done their job, and
+   chat.js hides them to give the conversation the space instead. */
+.chat-suggestions[hidden]{
+
+    display:none;
+
+}
+
 .chat-suggestion{
 
-    min-height:36px;
+    /* 44px, matching the tap-target minimum used elsewhere on the site.
+       These are standalone buttons, so they are not covered by the inline
+       exception that applies to links inside a sentence. */
+    min-height:44px;
 
-    padding:8px 14px;
+    padding:8px 16px;
 
     border:1px solid var(--gray-300);
 
@@ -498,7 +518,7 @@ body.has-consent-banner .back-to-top{
 
         right:16px;
 
-        bottom:calc(16px + 50px + 14px);
+        bottom:calc(16px + 50px + 14px + var(--consent-height, 0px));
 
         width:52px;
 
@@ -506,13 +526,7 @@ body.has-consent-banner .back-to-top{
 
     }
 
-    body.has-consent-banner .chat-launcher{
-
-        bottom:calc(16px + 50px + 14px + var(--consent-height, 0px));
-
-    }
-
-    body.has-consent-banner .back-to-top{
+    .back-to-top{
 
         bottom:calc(16px + var(--consent-height, 0px));
 
@@ -524,13 +538,46 @@ body.has-consent-banner .back-to-top{
 
         left:8px;
 
-        bottom:8px;
+        /* Offset by the consent banner as well. Without this the panel sat
+           at bottom:8px and covered the banner on phones, leaving the
+           composer partly behind it and the accept/decline buttons
+           unreachable while the chat was open. */
+        bottom:calc(8px + var(--consent-height, 0px));
 
         width:auto;
 
-        height:min(76vh, calc(100dvh - 110px));
+        /* The bottom offset here is only 8px plus the consent banner, so the
+           height only has to reserve a small top gap. Subtracting a larger
+           fixed amount (it was 110px) made the panel shorter than its own
+           content, which pushed the composer out of the panel and clipped
+           it. */
+        height:min(76vh, calc(100dvh - 16px - var(--consent-height, 0px)));
 
         border-radius:var(--radius-lg);
+
+    }
+
+    /* Keep the chips to a single scrollable row. Wrapped onto four or five
+       rows they consumed 214px of a 370px panel at 360px wide. */
+    .chat-suggestions{
+
+        flex-wrap:nowrap;
+
+        overflow-x:auto;
+
+        scrollbar-width:none;
+
+    }
+
+    .chat-suggestions::-webkit-scrollbar{
+
+        display:none;
+
+    }
+
+    .chat-suggestion{
+
+        flex-shrink:0;
 
     }
 

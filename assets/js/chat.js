@@ -18,11 +18,14 @@ const CHAT_ENDPOINT = "https://portfolio.happysadmi.workers.dev/chat";
 const MAX_HISTORY_TURNS = 8;
 const MAX_INPUT_CHARS = 800;
 
+/* Short labels on purpose. The longer phrasings wrapped onto four or five
+   rows in a 360px panel and pushed the composer out of view. These fit one
+   or two rows and still read as questions on their own. */
 const SUGGESTIONS = [
-  "What services do you offer?",
-  "Who is on the team?",
-  "What is your process?",
-  "How do I get in touch?"
+  "Our services",
+  "Meet the team",
+  "Our process",
+  "How to reach us"
 ];
 
 const GREETING =
@@ -211,6 +214,8 @@ function buildPanel() {
     input,
     sendBtn,
     chips,
+    suggestions,
+    chipsShown: true,
     history: [],
     isOpen: () => panel.classList.contains("is-open")
 };
@@ -282,6 +287,14 @@ async function sendMessage(panel) {
   panel.input.style.height = "auto";
 
   panel.log.appendChild(createElement("div", { className: "chat-msg is-user", text }));
+
+  // The starter chips have served their purpose. Keeping them around costs
+  // 110-215px of the panel, which on a short screen with the consent banner
+  // open is the difference between the composer fitting and being clipped.
+  if (panel.chipsShown) {
+    panel.chipsShown = false;
+    panel.suggestions.hidden = true;
+  }
 
   const pending = createElement("div", { className: "chat-msg is-bot is-pending" });
   pending.textContent = "";
