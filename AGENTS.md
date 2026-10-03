@@ -18,6 +18,7 @@ This is a **static website with zero build step and zero runtime dependencies**.
 
 ```
 index.html              Single page, all markup inline
+privacy.html            Privacy Notice (no analytics snippet by design)
 og-image.jpg            Social share card (1200x630)
 favicon.ico
 favicon-16x16.png / favicon-32x32.png
@@ -37,6 +38,7 @@ assets/
     app.js              Mobile menu, smooth scroll, sticky navbar, active nav,
                         back-to-top, PLUS shared loadJSON()/createElement()/renderFallback()
     animations.js       IntersectionObserver scroll reveal + stat counters
+    consent.js          Analytics consent gate (Consent Mode v2)
     portfolio.js        Portfolio grid, filters, project dialog (owns modal state)
     services.js         Services grid
     team.js             Team gallery
@@ -90,7 +92,21 @@ Static hosts send no `Cache-Control`, so browsers apply heuristic caching and ca
 
 > **After changing any CSS or JS, bump `?v=` in `index.html` to the next integer or visitors will not get the update.**
 
-### 5. CSS load order is significant
+### 5. Analytics consent is load-bearing
+
+`index.html` sets `gtag('consent', 'default', ...)` with everything denied **before** `gtag.js` loads, then `consent.js` grants only on opt-in.
+
+> **Do not merge the inline consent block and the `async` gtag loader into one `<script>`, and never move the loader above the inline block.** If `gtag.js` initialises before the default is queued, storage is already treated as granted and the whole gate silently stops working — with no visible symptom other than "analytics look normal."
+
+Verified behaviour:
+- Decline → `localStorage['hsm-consent'] = 'denied'`, GA4 keeps sending cookieless pings (`gcs=G100`), no `_ga` cookie is ever written.
+- Accept → `analytics_storage` granted, `_ga` / `_ga_WTDKF7Z8ZC` written.
+- `ad_*` signals stay denied regardless — no ad features run.
+- If `consent.js` never loads, nothing is granted. The failure mode is "no analytics", never "analytics without consent".
+
+`privacy.html` carries no analytics snippet at all, by design.
+
+### 6. CSS load order is significant
 
 ```
 style.css  →  components.css  →  animations.css
@@ -98,7 +114,7 @@ style.css  →  components.css  →  animations.css
 
 `animations.css` loads last, so its hover/transition declarations win. Preserve this order.
 
-### 6. Design tokens live in `:root` (`assets/css/style.css`)
+### 7. Design tokens live in `:root` (`assets/css/style.css`)
 
 Use variables, never hardcoded colours:
 
@@ -106,6 +122,7 @@ Use variables, never hardcoded colours:
 |---|---|
 | `--primary` / `--primary-light` | `#192A5D` / `#2C3B67` |
 | `--secondary` | `#3B82F6` |
+| `--secondary-text` | `#2563EB` |
 | `--accent` | `#10B981` |
 | `--dark` / `--light` / `--white` | `#0F172A` / `#F8FAFC` / `#FFFFFF` |
 | `--gray-100/200/300/500/700` | slate scale |
@@ -116,6 +133,8 @@ Use variables, never hardcoded colours:
 | `--transition` | `all .3s ease` |
 
 **Breakpoints:** `1200px` (container), `992px`, `768px`, `480px`. Match existing values; don't invent new magic numbers.
+
+**`--secondary` vs `--secondary-text`:** `--secondary` (`#3B82F6`) is the decorative brand blue and only reaches ~3.7:1 on white — it fails WCAG AA for text. Use `--secondary-text` (`#2563EB`, 5.17:1) for any **text or small icon on a light surface**: `.section-title span`, links in `privacy.html`, and hover backgrounds that carry white text. Reserve `--secondary` for large elements, borders, and dark-background use.
 
 **Responsive rules that matter:**
 - `.hero-image` carries the infinite `float` animation. The image's own `:hover` transform works because they are separate elements — do **not** move the float onto `.hero-image img`, or the hover effect becomes unreachable (an animated `transform` cannot be overridden).
@@ -209,7 +228,7 @@ Use `.webp` for photos and screenshots. Team photos render at 140×140 CSS px; p
 Pinned in `index.html` — do not change versions casually:
 - Google Fonts: Inter (300–700) + Poppins (500–800)
 - Font Awesome 6.7.1 via cdnjs
-- Google Analytics 4, property `G-WTDKF7Z8ZC`, `anonymize_ip: true`. The `gtag/js?id=` loader and the `gtag('config', ...)` ID **must match** — they previously did not.
+- Google Analytics 4, property `G-WTDKF7Z8ZC`, `anonymize_ip: true`, running under **Consent Mode v2** (see below). The `gtag/js?id=` loader and the `gtag('config', ...)` ID **must match** — they previously did not.
 - Contact form posts to **Web3Forms** via a hardcoded `access_key` hidden input
 
 `robots.txt` and `sitemap.xml` reference `https://happysadmi.com/`. Update both if the real domain differs.
@@ -219,8 +238,10 @@ Pinned in `index.html` — do not change versions casually:
 1. **The `software` portfolio filter matches no project.** `portfolio.json` has only `web`, `analytics`, and `automation` entries. The empty state renders a message, but either add a software project or remove that filter button.
 2. `robots.txt` `Disallow` rules and the sitemap assume a `happysadmi.com` domain that may not be the deployed one.
 3. No `<noscript>` fallback content — only a notice pointing to the email address.
-4. No CI, tests, or linter. Everything is verified manually.
-5. `?v=` cache-busting is a manual step (see rule 4).
+4. `privacy.html` was written by an engineer, not a lawyer. It reflects the site as built today (form fields, Web3Forms, GA4, fonts). Re-check it whenever you change what the site collects or which third parties are involved, and have it reviewed before relying on it for compliance.
+5. No CI, tests, or linter. Everything is verified manually.
+6. `?v=` cache-busting is a manual step (see rule 4).
+7. `privacy.html` states a 14-month analytics retention window. Confirm that matches the setting in your GA4 property; if not, fix one of the two.
 
 ## Verification
 

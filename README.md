@@ -33,6 +33,7 @@ Then open <http://localhost:8000>.
 
 ```
 index.html              Single page; all markup is inline
+privacy.html            Privacy Notice (no analytics on this page)
 og-image.jpg            Social share preview (1200x630)
 favicon.ico
 favicon-16x16.png
@@ -50,6 +51,7 @@ assets/
     app.js              Mobile menu, smooth scroll, sticky navbar, active nav,
                         back-to-top, plus the shared loadJSON()/createElement()
     animations.js       Scroll reveal + animated stat counters
+    consent.js          Analytics consent gate (Consent Mode v2)
     portfolio.js        Portfolio grid, category filters, project dialog
     services.js         Services grid
     team.js             Team gallery
@@ -173,6 +175,33 @@ its long edge. Over-sized assets are the fastest way to slow this site down; the
 hero background alone is an animated WebP.
 
 ---
+
+## Analytics consent
+
+Google Analytics runs under **Consent Mode v2**. Analytics storage is denied
+by default in `index.html`, so a visitor who never touches the banner is
+never cookieless-tracked, let alone cookie-tracked. The banner offers a
+genuine opt-in:
+
+- **Decline** — the choice is remembered, GA4 keeps sending cookieless pings
+  (`gcs=G100`), and no `_ga` cookie is ever set.
+- **Accept** — `analytics_storage` is granted and `_ga` cookies are written.
+
+The choice is stored in `localStorage` under `hsm-consent`, so the banner
+appears once and not again. To change a decision, clear this site's browser
+data.
+
+Two things to be aware of:
+
+1. **The ordering in `<head>` is load-bearing.** The `gtag('consent', 'default')`
+   call must be pushed to `dataLayer` *before* `gtag.js` loads, otherwise
+   storage is already granted by the time the library initialises and the
+   default is ignored. The inline block and the `async` loader are therefore
+   two separate `<script>` tags — do not merge them.
+2. **If `consent.js` fails to load, nothing is granted.** The failure mode is
+   "no analytics", never "analytics without consent".
+
+`privacy.html` intentionally carries no analytics snippet at all.
 
 ## Accessibility
 

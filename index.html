@@ -69,9 +69,9 @@
 
     <!-- CSS -->
 
-    <link rel="stylesheet" href="assets/css/style.css?v=6">
-    <link rel="stylesheet" href="assets/css/components.css?v=6">
-    <link rel="stylesheet" href="assets/css/animations.css?v=6">
+    <link rel="stylesheet" href="assets/css/style.css?v=9">
+    <link rel="stylesheet" href="assets/css/components.css?v=9">
+    <link rel="stylesheet" href="assets/css/animations.css?v=9">
 
     <!-- Icons / PWA -->
 
@@ -81,9 +81,17 @@
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="manifest" href="site.webmanifest">
 
-    <!-- Google Analytics -->
+    <!-- Google Analytics (Consent Mode v2) -->
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WTDKF7Z8ZC"></script>
+    <!--
+        The consent default MUST be pushed to dataLayer before gtag.js loads,
+        otherwise analytics_storage is already "granted" by the time the
+        library initialises and the default is ignored.
+
+        These calls are queued synchronously here and replayed by gtag.js,
+        so the ordering below is load-bearing: inline block first, then the
+        async loader. Do not merge them into one <script> tag.
+    -->
 
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -92,10 +100,22 @@
             dataLayer.push(arguments);
         }
 
+        // Deny by default. GA4 stays dormant until the visitor opts in
+        // via the consent banner (see assets/js/consent.js).
+        gtag('consent', 'default', {
+            analytics_storage: 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            wait_for_update: 500
+        });
+
         gtag('js', new Date());
 
         gtag('config', 'G-WTDKF7Z8ZC', { anonymize_ip: true });
     </script>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WTDKF7Z8ZC"></script>
     <!-- End Google Analytics -->
 </head>
 
@@ -866,6 +886,8 @@
 
                         <li><a href="#contact">Contact</a></li>
 
+                        <li><a href="privacy.html">Privacy Notice</a></li>
+
                     </ul>
 
                 </nav>
@@ -1003,14 +1025,73 @@
 
 </div>
 
+    <!-- ================= CONSENT BANNER ================= -->
+
+    <!--
+        Hidden until assets/js/consent.js finds no stored choice. The GA4
+        consent default in <head> already blocks analytics regardless of
+        what this banner does, so a JS failure here degrades to "no
+        analytics" rather than "unconsented analytics".
+    -->
+
+    <div
+        class="consent-banner"
+        id="consentBanner"
+        role="dialog"
+        aria-labelledby="consentTitle"
+        aria-describedby="consentText"
+        hidden>
+
+        <div class="consent-inner">
+
+            <div class="consent-copy">
+
+                <h2 id="consentTitle">Cookies and analytics</h2>
+
+                <p id="consentText">
+                    We use Google Analytics to understand how the site is used so we
+                    can improve it. Analytics is optional &mdash; you can decline and
+                    still use everything on this site. Read our
+                    <a href="privacy.html">Privacy Notice</a> for details.
+                </p>
+
+            </div>
+
+            <div class="consent-actions">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    id="consentDecline">
+
+                    Decline
+
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="consentAccept">
+
+                    Accept analytics
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
     <!-- ================= JAVASCRIPT ================= -->
 
-    <script src="assets/js/app.js?v=6"></script>
-    <script src="assets/js/animations.js?v=6"></script>
-    <script src="assets/js/portfolio.js?v=6"></script>
-    <script src="assets/js/services.js?v=6"></script>
-    <script src="assets/js/team.js?v=6"></script>
-    <script src="assets/js/testimonials.js?v=6"></script>
+    <script src="assets/js/app.js?v=9"></script>
+    <script src="assets/js/animations.js?v=9"></script>
+    <script src="assets/js/consent.js?v=9"></script>
+    <script src="assets/js/portfolio.js?v=9"></script>
+    <script src="assets/js/services.js?v=9"></script>
+    <script src="assets/js/team.js?v=9"></script>
+    <script src="assets/js/testimonials.js?v=9"></script>
 
 </body>
 
