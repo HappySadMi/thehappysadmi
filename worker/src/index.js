@@ -17,6 +17,10 @@
 
 import { loadKnowledge, summarise } from "./knowledge.js";
 import { SYSTEM_PROMPT } from "./prompt.js";
+import { checkRateLimit, rateLimitHeaders, RateLimiter } from "./ratelimit.js";
+
+// Re-exported so Wrangler can find the Durable Object class in the entry module.
+export { RateLimiter };
 
 const MAX_MESSAGE_CHARS = 800;
 const MAX_HISTORY_TURNS = 8;
@@ -37,7 +41,7 @@ function allowedOrigins(env) {
  * required because the response varies by origin -- without it a shared
  * cache could serve one origin's response to another.
  */
-function corsHeaders(env, request) {
+function corsHeaders(env, request, extra = {}) {
   const origin = request.headers.get("Origin");
   const allowed = allowedOrigins(env);
 
@@ -47,6 +51,7 @@ function corsHeaders(env, request) {
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
+    ...extra,
   };
 
   if (origin && allowed.includes(origin)) {
@@ -56,10 +61,10 @@ function corsHeaders(env, request) {
   return headers;
 }
 
-function json(env, request, body, status = 200) {
+function json(env, request, body, status = 200, extra = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: corsHeaders(env, request),
+    headers: corsHeaders(env, request, extra),
   });
 }
 
@@ -101,7 +106,24 @@ export default {
       }
 
       if (url.pathname === "/chat" && request.method === "POST") {
-        return handleChat(env, request);
+        // Only the endpoint that costs money is limited. /health and
+        // /prompt are cheap and staying reachable makes debugging easier.
+        const limit = await checkRateLimit(env, request);
+
+        if (!limit.allowed) {
+          return json(
+            env,
+            request,
+            {
+              error: "Too many requests. Please wait a moment and try again.",
+              retryAfter: limit.retryAfterSeconds,
+            },
+            429,
+            rateLimitHeaders(limit)
+          );
+        }
+
+        return handleChat(env, request, rateLimitHeaders(limit));
       }
 
       if (url.pathname === "/" && request.method === "GET") {
@@ -127,7 +149,7 @@ export default {
 /* Chat (Phase 1 stub)                                                 */
 /* ------------------------------------------------------------------ */
 
-async function handleChat(env, request) {
+async function handleChat(env, request, extraHeaders = {}) {
   let body;
 
   try {
@@ -139,7 +161,13 @@ async function handleChat(env, request) {
   const message = typeof body.message === "string" ? body.message.trim() : "";
 
   if (!message) {
-    return json(env, request, { error: "A non-empty \"message\" string is required." }, 400);
+    return json(
+      env,
+      request,
+      { error: "A non-empty \"message\" string is required." },
+      400,
+      extraHeaders
+    );
   }
 
   if (message.length > MAX_MESSAGE_CHARS) {
@@ -147,7 +175,8 @@ async function handleChat(env, request) {
       env,
       request,
       { error: `Message too long (max ${MAX_MESSAGE_CHARS} characters).` },
-      413
+      413,
+      extraHeaders
     );
   }
 
@@ -171,5 +200,5 @@ async function handleChat(env, request) {
       prose: knowledge.prose,
     },
     systemPrompt: SYSTEM_PROMPT,
-  });
+  }, 200, extraHeaders);
 }

@@ -16,6 +16,22 @@ account_id = "010abb6f8110187db697437e1747394c"
 [observability]
 enabled = true
 
+# Rate limiting.
+#
+# A Cloudflare WAF rate-limiting rule was the preferred option in the plan,
+# but it is a ZONE feature and this account has no zone (workers.dev only)
+# on the Free plan. Enforcement therefore lives in the Worker, using one
+# Durable Object per client IP. Without this, a module-level Map would only
+# throttle whichever isolate happened to serve an attacker.
+
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RateLimiter"]
+
 [vars]
 # Where the live site content is fetched from. Note the /thehappysadmi/
 # subpath: the site is served from a GitHub Pages project path.
@@ -27,3 +43,11 @@ ALLOWED_ORIGINS = "https://happysadmi.github.io"
 
 # Seconds to hold the assembled site content in the edge cache.
 CONTENT_CACHE_TTL = "300"
+
+# Sustained /chat requests allowed per minute, per IP.
+# Kept generous on purpose: many Philippine mobile subscribers share one
+# public IP behind carrier NAT, so a tight limit locks out real visitors.
+RATE_LIMIT_PER_MINUTE = "20"
+
+# Token bucket depth, i.e. short bursts are tolerated.
+RATE_LIMIT_BURST = "10"

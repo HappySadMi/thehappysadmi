@@ -3,16 +3,17 @@
 Cloudflare Worker that will power the site chatbot. Deploys to
 `https://portfolio.happysadmi.workers.dev`.
 
-**Status: Phase 1 complete — no AI wired up yet.** The Worker currently only
-proves the plumbing: correct account, live content fetching, CORS, and input
-validation. `/chat` returns the exact payload the model will receive.
+**Status: Phase 2 complete — rate limiting is in, no AI yet.** The Worker proves
+the plumbing and now enforces per-IP rate limits. `/chat` returns the exact
+payload the model will receive.
 
 ## Files
 
 ```
-wrangler.toml              name, pinned account_id, vars
-src/index.js               fetch handler: CORS, routing, validation
+wrangler.toml              name, pinned account_id, vars, Durable Object binding
+src/index.js               fetch handler: CORS, routing, rate limit, validation
 src/knowledge.js           live content fetch + edge cache + snapshot fallback
+src/ratelimit.js           token-bucket Durable Object + in-isolate fallback
 src/prose.js               About story, process steps, tech stack (hand-maintained)
 src/prompt.js              short system prompt (~464 tokens)
 src/snapshot.js            GENERATED fallback copy of data/*.json
@@ -111,6 +112,47 @@ node worker/scripts/build-knowledge.mjs
 `source` is one of `live` (fetched this request), `live-cache` (served from the
 edge cache) or `snapshot` (fallback).
 
+## Rate limiting
+
+`POST /chat` is rate limited per client IP with a token bucket:
+
+```
+RATE_LIMIT_PER_MINUTE = 20   sustained
+RATE_LIMIT_BURST     = 10   bucket depth
+```
+
+Exceeding it returns `429` with `Retry-After`, and `X-RateLimit-Limit` /
+`X-RateLimit-Remaining` are sent on successful responses too. `GET /health`
+and `GET /prompt` are not limited, so the endpoint stays debuggable.
+
+Tune both values in `wrangler.toml` under `[vars]` — no code change needed.
+
+### Why it lives in the Worker
+
+The plan originally preferred a **Cloudflare WAF rate-limiting rule**, which
+runs at the edge before the Worker and is cheaper. That turned out not to be
+available here:
+
+- WAF rate limiting is a **zone** feature, and this account has **no zone**
+  (it uses `workers.dev` only)
+- the account is on the **Workers Free plan** (no subscription)
+
+So enforcement lives in the Worker, using **one Durable Object per IP** via
+`idFromName(ip)`. A plain module-level `Map` was rejected: Workers are
+stateless across isolates, so it would only throttle whichever isolate
+happened to be serving an attacker.
+
+If a DO binding is ever missing, `checkRateLimit()` falls back to an
+in-isolate bucket rather than failing, so a misconfigured deployment loses
+accuracy instead of breaking the endpoint.
+
+### Carrier NAT caveat
+
+The limit is keyed on IP alone. Many Philippine mobile subscribers share one
+public IP behind carrier NAT, so a tight limit would lock out real visitors
+mid-conversation. `20/min` with a `10` burst is deliberately generous. Raise
+it if legitimate users ever report being throttled.
+
 ## Security
 
 - Requests from an origin not in `ALLOWED_ORIGINS` are rejected with 403
@@ -126,9 +168,9 @@ edge cache) or `snapshot` (fallback).
   server-side for the same reason.
 - Visitor messages are never logged and never persisted.
 
-## Phase 1 verification results
+## Verification results
 
-Checked against `wrangler dev`:
+Checked against `wrangler dev` (Phases 1 and 2):
 
 | Check | Result |
 |---|---|
@@ -144,13 +186,18 @@ Checked against `wrangler dev`:
 | Unknown path | 404 |
 | `GET /chat` | 404 (POST only) |
 | System prompt size | ~464 tokens |
+| **Burst of 30 rapid requests, one IP** | 11 allowed, 19 × `429` with `Retry-After: 2` |
+| **Per-IP isolation** | A second IP got its own full bucket (exactly 10), while the exhausted one stayed blocked |
+| **Bucket drains deterministically** | Fresh IP drained after exactly 10 requests (= `RATE_LIMIT_BURST`) |
+| **Refill rate measured** | 5 requests allowed after a 15s wait → **19 req/min observed** against a 20/min target |
+| **Durable Object actually engaged** | Three separate SQLite state files created under `portfolio-RateLimiter/`, one per test IP — confirming the DO path, not the in-isolate fallback |
 
 ## Known gaps before Phase 3
 
-- **No rate limiting.** This is the one deliberate omission so far — the plan
-  calls for a Cloudflare WAF rate-limiting rule, or a Durable Object if the
-  plan level does not allow one. Phase 2.
-- No conversation history is actually used yet (validated, but Phase 1 sends
-  nothing to a model).
+- No conversation history is used yet (validated, but nothing is sent to a
+  model yet).
 - `SITE_PROSE` in `src/prose.js` is hand-maintained. If the About copy,
   process steps or tech stack in `index.html` change, update it too.
+- Durable Objects are assumed available on the Workers Free plan. This works
+  locally, but the first real deploy is what confirms it on the account.
+- **Not deployed yet.** `portfolio.happysadmi.workers.dev` still 404s.
