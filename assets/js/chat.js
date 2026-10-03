@@ -66,6 +66,19 @@ function initChat() {
 
   panel.closeBtn.addEventListener("click", () => closeChat(launcher, panel));
 
+  // Wired here rather than inside buildPanel, because only now do we have
+  // the controls object the handler needs.
+  panel.chips.forEach(chip => {
+
+    chip.addEventListener("click", () => {
+
+      panel.input.value = chip.textContent;
+      sendMessage(panel);
+
+    });
+
+  });
+
   panel.form.addEventListener("submit", (event) => {
 
     event.preventDefault();
@@ -142,17 +155,20 @@ function buildPanel() {
   });
   log.append(createElement("div", { className: "chat-msg is-bot", text: GREETING }));
 
+  // Chips are built here but wired in initChat. Inside this function
+  // `panel` is the DOM element, not the controls object returned at the
+  // end, so `panel.input` would be undefined. Binding the listener here
+  // threw on every click.
   const suggestions = createElement("div", { className: "chat-suggestions" });
+  const chips = [];
+
   SUGGESTIONS.forEach(text => {
     const chip = createElement("button", {
       className: "chat-suggestion",
       text,
       attrs: { type: "button" }
     });
-    chip.addEventListener("click", () => {
-      panel.input.value = text;
-      sendMessage(panel);
-    });
+    chips.push(chip);
     suggestions.appendChild(chip);
   });
 
@@ -194,7 +210,7 @@ function buildPanel() {
     form,
     input,
     sendBtn,
-    suggestions,
+    chips,
     history: [],
     isOpen: () => panel.classList.contains("is-open")
 };
