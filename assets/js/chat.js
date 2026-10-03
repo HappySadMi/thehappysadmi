@@ -256,25 +256,26 @@ function buildPanel() {
  */
 function openChat(launcher, ui) {
 
+  // Un-hide first: the closed state is display:none, so this is what makes
+  // the panel render at all.
   ui.panel.hidden = false;
 
-  // Flush the just-removed [hidden] state so the transition has a starting
-  // value to animate from.
+  // Flush the just-removed [hidden] state so the entrance animation has a
+  // starting value.
   //
   // Deliberately NOT requestAnimationFrame. rAF is paused in background tabs
-  // and throttled by some mobile browsers, and this callback is what makes
-  // the panel visible at all -- with rAF, those environments got a panel that
-  // reported aria-expanded="true" but stayed visibility:hidden, i.e.
-  // completely invisible and unusable.
+  // and throttled by some mobile browsers, and it used to be what decided
+  // whether the panel was visible.
   void ui.panel.offsetHeight;
 
+  // Adds the entrance animation only. The panel's open appearance is the
+  // plain CSS default, so if the animation never runs the panel is still
+  // visible and usable rather than stuck invisible.
   ui.panel.classList.add("is-open");
 
   launcher.setAttribute("aria-expanded", "true");
   launcher.hidden = true;
 
-  // Safe to focus now that the panel is visible. Focusing an element that is
-  // still visibility:hidden silently does nothing.
   ui.input.focus();
 
 }
@@ -282,20 +283,14 @@ function openChat(launcher, ui) {
 function closeChat(launcher, ui) {
 
   ui.panel.classList.remove("is-open");
+  ui.panel.hidden = true;
 
   launcher.setAttribute("aria-expanded", "false");
 
-  // Unhide before restoring focus, otherwise the launcher is still
+  // Show the launcher before restoring focus, otherwise it is still
   // display:none and focus() silently goes nowhere.
   launcher.hidden = false;
   launcher.focus();
-
-  // Hide only once the fade-out has finished, and only if it was not
-  // reopened in the meantime. The timeout is a safety net for a transition
-  // that never fires (for example under reduced-motion overrides).
-  setTimeout(() => {
-    if (!ui.isOpen()) ui.panel.hidden = true;
-  }, 240);
 
 }
 

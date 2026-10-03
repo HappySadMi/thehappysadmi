@@ -64,9 +64,7 @@
     cursor:pointer;
 
     transition:transform .28s cubic-bezier(.34,1.56,.64,1),
-               box-shadow .28s ease,
-               opacity .2s ease,
-               visibility .2s;
+               box-shadow .28s ease;
 
 }
 
@@ -158,16 +156,21 @@
     /* Opens from the launcher's corner. */
     transform-origin:bottom right;
 
-    transform:scale(.9) translateY(14px);
+    /* The OPEN state is the plain, visible default.
 
-    opacity:0;
+       This is deliberate. An earlier version kept the panel permanently at
+       opacity:0 / visibility:hidden and relied on a transition to reach the
+       visible state. If no frame is ever painted -- which is exactly what
+       happened on the live site -- the transition never advances and the
+       panel stayed at opacity 0 while aria-expanded said otherwise: the
+       launcher vanished and left nothing behind.
 
-    /* visibility must flip instantly on open and be delayed on close, so
-       focus() lands on a focusable element. */
-    visibility:hidden;
+       Closing is therefore display:none via [hidden], and the entrance is an
+       animation with no fill-mode, so a stalled animation degrades to
+       "visible but static" rather than "invisible". */
+    opacity:1;
 
-    transition:opacity .22s ease, transform .28s cubic-bezier(.34,1.4,.64,1),
-               visibility 0s linear .22s;
+    transform:none;
 
 }
 
@@ -179,14 +182,15 @@
 
 .chat-panel.is-open{
 
-    transform:scale(1) translateY(0);
+    animation:chatPop .3s cubic-bezier(.34,1.4,.64,1);
 
-    opacity:1;
+}
 
-    visibility:visible;
+@keyframes chatPop{
 
-    transition:opacity .22s ease, transform .28s cubic-bezier(.34,1.4,.64,1),
-               visibility 0s linear 0s;
+    from{opacity:0;transform:scale(.9) translateY(14px)}
+
+    to{opacity:1;transform:scale(1) translateY(0)}
 
 }
 
@@ -961,6 +965,12 @@
     }
 
     .chat-launcher::after{
+
+        animation:none;
+
+    }
+
+    .chat-panel.is-open{
 
         animation:none;
 
