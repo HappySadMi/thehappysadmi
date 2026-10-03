@@ -103,6 +103,16 @@ html{
 
     transition:transform .35s ease;
 
+    /* Safety net for short/landscape viewports: never let the banner
+       cover the whole screen, and let it scroll if it has to. */
+    max-height:85vh;
+
+    max-height:85dvh;
+
+    overflow-y:auto;
+
+    overscroll-behavior:contain;
+
 }
 
 .consent-banner.show{
@@ -134,6 +144,8 @@ html{
 .consent-copy{
 
     flex:1 1 460px;
+
+    min-width:0;
 
 }
 
@@ -243,6 +255,17 @@ html{
         align-items:stretch;
 
         gap:18px;
+
+    }
+
+    /* flex-basis resolves against the MAIN axis. Once .consent-inner
+       flips to column, the 460px basis above becomes a 460px HEIGHT,
+       which stretched the banner to ~77% of a phone screen and pushed
+       the buttons to the bottom. Reset it for the column layout. */
+
+    .consent-copy{
+
+        flex:0 0 auto;
 
     }
 
